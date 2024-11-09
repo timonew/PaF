@@ -1,0 +1,32 @@
+com.globalcityquest
+├── config
+│   ├── SecurityConfig.java            # Spring Security configuration
+│   └── WebSocketConfig.java           # WebSocket configuration for real-time game updates
+├── controller
+│   ├── GameController.java            # Handles game-related API endpoints
+│   ├── UserController.java            # Handles user-related API endpoints (login, registration)
+├── dto                                # Data Transfer Objects (DTOs)
+│   ├── GameMoveDTO.java               # Data transfer for game moves
+│   ├── LoginRequest.java              # Data transfer for login requests
+│   └── RegisterRequest.java           # Data transfer for user registration
+├── entity                             # JPA entity classes
+│   ├── Highscore.java                 # Represents a user's high score
+│   ├── MapLayer.java                  # Represents map layers (e.g., continent view, world view)
+│   ├── Spiel.java                     # Main game entity (with fields like rounds, difficulty)
+│   ├── Spielzug.java                  # Represents each move in a game
+│   ├── Spieler.java                   # Represents a player (user)
+│   └── Stadt.java                     # Represents cities with coordinates for gameplay
+├── exception                          # Custom exceptions
+│   └── UserNotFoundException.java     # Exception for missing users
+├── repository                         # JPA repositories
+│   ├── GameRepository.java            # Repository for `Spiel`
+│   ├── HighscoreRepository.java       # Repository for `Highscore`
+│   ├── MapLayerRepository.java        # Repository for `MapLayer`
+│   ├── SpielzugRepository.java        # Repository for `Spielzug`
+│   ├── SpielerRepository.java         # Repository for `Spieler`
+│   └── StadtRepository.java           # Repository for `Stadt`
+├── service                            # Business logic for user and game management
+│   ├── GameService.java               # Main service for managing game logic
+│   ├── HighscoreService.java          # Service for handling high scores
+│   └── UserService.java               # Service for user management (registration, login)
+└── Application.java                   # Main Spring Boot application class
