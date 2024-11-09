@@ -1,8 +1,10 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository;
 
-public class StadtRepository {
-	public static void main(String[] args) {
-		StadtRepository
-	}
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Stadt;
+
+public interface StadtRepository extends JpaRepository<Stadt, Long> {
+    // Additional queries for cities if needed
 }
 

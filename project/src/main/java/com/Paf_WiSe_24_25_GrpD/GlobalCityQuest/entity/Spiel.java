@@ -1,92 +1,86 @@
-package com.PaF_WiSe_24_25_Grp_D.Glocal.City.Quest;
-import java.util.Set;
-import java.util.HashSet;
+package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
+import java.util.Set;
+
+import org.springframework.data.annotation.Id;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
+@Entity
 public class Spiel {
+
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+
    private char continent;
-   
-   public void setContinent(char value) {
-      this.continent = value;
-   }
-   
-   public char getContinent() {
-      return this.continent;
-   }
-   
    private int difficultyLevel;
-   
-   public void setDifficultyLevel(int value) {
-      this.difficultyLevel = value;
-   }
-   
-   public int getDifficultyLevel() {
-      return this.difficultyLevel;
-   }
-   
-   /**
-    * <pre>
-    *           0..1     1..1
-    * Spiel ------------------------- Spieler
-    *           &gt;       spieler1
-    * </pre>
-    */
+
+   @ManyToOne
+   @JoinColumn(name = "spieler1_id")
    private Spieler spieler1;
-   
-   public void setSpieler1(Spieler value) {
-      this.spieler1 = value;
-   }
-   
-   public Spieler getSpieler1() {
-      return this.spieler1;
-   }
-   
-   /**
-    * <pre>
-    *           0..1     1..1
-    * Spiel ------------------------- Spieler
-    *           &gt;       spieler2
-    * </pre>
-    */
+
+   @ManyToOne
+   @JoinColumn(name = "spieler2_id")
    private Spieler spieler2;
-   
-   public void setSpieler2(Spieler value) {
-      this.spieler2 = value;
-   }
-   
-   public Spieler getSpieler2() {
-      return this.spieler2;
-   }
-   
-   /**
-    * <pre>
-    *           1..1     1..*
-    * Spiel ------------------------> MapLayer
-    *           spiel        &gt;       mapLayer
-    * </pre>
-    */
-   private Set<MapLayer> mapLayer;
-   
-   public Set<MapLayer> getMapLayer() {
-      if (this.mapLayer == null) {
-         this.mapLayer = new HashSet<MapLayer>();
-      }
-      return this.mapLayer;
-   }
-   
-   /**
-    * <pre>
-    *           1..1     10..10
-    * Spiel ------------------------- Spielzug
-    *           spiel        &gt;       spielzug
-    * </pre>
-    */
+
+   @OneToMany(mappedBy = "spiel")
    private Set<Spielzug> spielzug;
-   
+
+   @OneToMany
+   private Set<MapLayer> mapLayer;
+
+   // Getter und Setter
+   public char getContinent() {
+      return continent;
+   }
+
+   public void setContinent(char continent) {
+      this.continent = continent;
+   }
+
+   public int getDifficultyLevel() {
+      return difficultyLevel;
+   }
+
+   public void setDifficultyLevel(int difficultyLevel) {
+      this.difficultyLevel = difficultyLevel;
+   }
+
+   public Spieler getSpieler1() {
+      return spieler1;
+   }
+
+   public void setSpieler1(Spieler spieler1) {
+      this.spieler1 = spieler1;
+   }
+
+   public Spieler getSpieler2() {
+      return spieler2;
+   }
+
+   public void setSpieler2(Spieler spieler2) {
+      this.spieler2 = spieler2;
+   }
+
    public Set<Spielzug> getSpielzug() {
-      if (this.spielzug == null) {
-         this.spielzug = new HashSet<Spielzug>();
-      }
-      return this.spielzug;
+      return spielzug;
    }
-   
+
+   public void setSpielzug(Set<Spielzug> spielzug) {
+      this.spielzug = spielzug;
    }
+
+   public Set<MapLayer> getMapLayer() {
+      return mapLayer;
+   }
+
+   public void setMapLayer(Set<MapLayer> mapLayer) {
+      this.mapLayer = mapLayer;
+   }
+}

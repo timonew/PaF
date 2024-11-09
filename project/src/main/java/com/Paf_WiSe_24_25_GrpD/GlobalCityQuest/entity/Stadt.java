@@ -1,62 +1,67 @@
-package com.PaF_WiSe_24_25_Grp_D.Glocal.City.Quest;
-import java.util.Set;
-import java.util.HashSet;
+package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
+import java.util.Set;
+
+import org.springframework.data.annotation.Id;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.OneToMany;
+
+@Entity
 public class Stadt {
-   private char name;
-   
-   public void setName(char value) {
-      this.name = value;
-   }
-   
-   public char getName() {
-      return this.name;
-   }
-   
-   private char koordinaten;
-   
-   public void setKoordinaten(char value) {
-      this.koordinaten = value;
-   }
-   
-   public char getKoordinaten() {
-      return this.koordinaten;
-   }
-   
+
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+
+   private String name;
+   private String koordinaten;
    private int difficultyLevel;
-   
-   public void setDifficultyLevel(int value) {
-      this.difficultyLevel = value;
-   }
-   
-   public int getDifficultyLevel() {
-      return this.difficultyLevel;
-   }
-   
    private char continent;
-   
-   public void setContinent(char value) {
-      this.continent = value;
-   }
-   
-   public char getContinent() {
-      return this.continent;
-   }
-   
-   /**
-    * <pre>
-    *           1..1     0..*
-    * Stadt ------------------------- Spielzug
-    *           stadt        &lt;       spielzug
-    * </pre>
-    */
+
+   @OneToMany(mappedBy = "stadt")
    private Set<Spielzug> spielzug;
-   
+
+   // Getter und Setter
+   public String getName() {
+      return name;
+   }
+
+   public void setName(String name) {
+      this.name = name;
+   }
+
+   public String getKoordinaten() {
+      return koordinaten;
+   }
+
+   public void setKoordinaten(String koordinaten) {
+      this.koordinaten = koordinaten;
+   }
+
+   public int getDifficultyLevel() {
+      return difficultyLevel;
+   }
+
+   public void setDifficultyLevel(int difficultyLevel) {
+      this.difficultyLevel = difficultyLevel;
+   }
+
+   public char getContinent() {
+      return continent;
+   }
+
+   public void setContinent(char continent) {
+      this.continent = continent;
+   }
+
    public Set<Spielzug> getSpielzug() {
-      if (this.spielzug == null) {
-         this.spielzug = new HashSet<Spielzug>();
-      }
-      return this.spielzug;
+      return spielzug;
    }
-   
+
+   public void setSpielzug(Set<Spielzug> spielzug) {
+      this.spielzug = spielzug;
    }
+}

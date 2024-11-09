@@ -1,34 +1,45 @@
-package com.PaF_WiSe_24_25_Grp_D.Glocal.City.Quest;
+package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
+import org.springframework.data.annotation.Id;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+
+@Entity
 public class MapLayer {
+
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+   
    private char mapContinent;
-   
-   public void setMapContinent(char value) {
-      this.mapContinent = value;
-   }
-   
-   public char getMapContinent() {
-      return this.mapContinent;
-   }
-   
    private char mapDifficultyLevel;
-   
-   public void setMapDifficultyLevel(char value) {
-      this.mapDifficultyLevel = value;
+   private String layerPath; // Ändern auf String, um Dateipfade zu speichern
+
+   // Getter und Setter
+   public char getMapContinent() {
+      return mapContinent;
    }
-   
+
+   public void setMapContinent(char mapContinent) {
+      this.mapContinent = mapContinent;
+   }
+
    public char getMapDifficultyLevel() {
-      return this.mapDifficultyLevel;
+      return mapDifficultyLevel;
    }
-   
-   private char layerPath;
-   
-   public void setLayerPath(char value) {
-      this.layerPath = value;
+
+   public void setMapDifficultyLevel(char mapDifficultyLevel) {
+      this.mapDifficultyLevel = mapDifficultyLevel;
    }
-   
-   public char getLayerPath() {
-      return this.layerPath;
+
+   public String getLayerPath() {
+      return layerPath;
    }
-   
+
+   public void setLayerPath(String layerPath) {
+      this.layerPath = layerPath;
    }
+}
+

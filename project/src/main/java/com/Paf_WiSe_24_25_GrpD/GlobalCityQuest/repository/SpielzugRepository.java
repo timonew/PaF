@@ -1,8 +1,10 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository;
 
-public class SpielzugRepository {
-	public static void main(String[] args) {
-		SpielzugRepository
-	}
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
+
+public interface SpielzugRepository extends JpaRepository<Spielzug, Long> {
+    // Define additional methods to handle game moves if needed
 }
+
 
