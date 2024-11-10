@@ -2,38 +2,38 @@ package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller;
 
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.UserService;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    // GET-Login-Seite
-    @GetMapping("/login")
-    public String login() {
-        return "login"; // Login-HTML-Seite wird geladen
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    // GET-Registrierungsseite
-    @GetMapping("/register")
-    public String showRegistrationForm(Model model) {
-        model.addAttribute("spieler", new Spieler()); // Neues Spieler-Objekt für Formular
-        return "register"; // Register-HTML-Seite wird geladen
+    // POST-Login-Endpoint, der bei erfolgreichem Login ein JWT-Token zurückgibt
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Spieler loginRequest) {
+        Spieler spieler = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
+
+        if (spieler != null) {
+            String token = jwtUtil.generateToken(spieler.getUsername());
+            return ResponseEntity.ok(token); // Token wird zurückgegeben
+        } else {
+            return ResponseEntity.status(401).body("Ungültige Zugangsdaten");
+        }
     }
 
     // POST-Registrierung
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute("spieler") Spieler spieler) {
-        userService.registerUser(spieler); // Benutzer registrieren
-        return "redirect:/login"; // Nach Registrierung zur Login-Seite weiterleiten
+    public ResponseEntity<?> registerUser(@RequestBody Spieler spieler) {
+        userService.registerUser(spieler);
+        return ResponseEntity.ok("Registrierung erfolgreich");
     }
 }
-
-

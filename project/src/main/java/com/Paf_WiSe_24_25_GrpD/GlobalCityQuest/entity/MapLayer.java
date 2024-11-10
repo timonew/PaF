@@ -2,44 +2,31 @@ package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
 import org.springframework.data.annotation.Id;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+@Table(name = "map_layer") // Optional, falls ein spezifischer Tabellenname gewünscht ist
 public class MapLayer {
 
-   @Id
-   @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
-   
-   private char mapContinent;
-   private char mapDifficultyLevel;
-   private String layerPath; // Ändern auf String, um Dateipfade zu speichern
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-   // Getter und Setter
-   public char getMapContinent() {
-      return mapContinent;
-   }
+    @Column(name = "map_continent", nullable = false) // Optional: Datenbankspaltenname explizit setzen
+    private char mapContinent;
 
-   public void setMapContinent(char mapContinent) {
-      this.mapContinent = mapContinent;
-   }
+    @Column(name = "map_difficulty_level", nullable = false)
+    private char mapDifficultyLevel;
 
-   public char getMapDifficultyLevel() {
-      return mapDifficultyLevel;
-   }
+    @Column(name = "layer_path", nullable = false)
+    private String layerPath; 
 
-   public void setMapDifficultyLevel(char mapDifficultyLevel) {
-      this.mapDifficultyLevel = mapDifficultyLevel;
-   }
-
-   public String getLayerPath() {
-      return layerPath;
-   }
-
-   public void setLayerPath(String layerPath) {
-      this.layerPath = layerPath;
-   }
 }
-

@@ -1,6 +1,10 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 
 public class LoginRequestDTO {
 
@@ -10,21 +14,6 @@ public class LoginRequestDTO {
     
     private String password;
 
-    // Getter und Setter
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+  
 }
 

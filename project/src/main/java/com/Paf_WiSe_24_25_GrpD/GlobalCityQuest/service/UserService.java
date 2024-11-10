@@ -35,11 +35,16 @@ public class UserService implements UserDetailsService {
         }
         Spieler spieler = spielerOpt.get();
         return org.springframework.security.core.userdetails.User.builder()
-                .username(spieler.getUserName())
+                .username(spieler.getUsername())
                 .password(spieler.getPassword())
                 .roles("USER") // Rollen werden hier festgelegt, anpassbar falls benötigt
                 .build();
     }
+
+	public Spieler authenticate(Object username, Object password) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
 
 

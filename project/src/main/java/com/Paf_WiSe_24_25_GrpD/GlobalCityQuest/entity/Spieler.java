@@ -1,99 +1,58 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
 import java.util.Set;
-
-import org.springframework.data.annotation.Id;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+@Table(name = "spieler") // Optional: Tabellennamen angeben
 public class Spieler {
 
-   @Id
-   @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-   private String name;
-   private String userName;
-   private String password;
-   private long currentscore;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-   @OneToMany(mappedBy = "spieler1")
-   private Set<Spiel> spiele1;
+    @Column(name = "user_name", nullable = false, unique = true)
+    private String userName;
 
-   @OneToMany(mappedBy = "spieler2")
-   private Set<Spiel> spiele2;
+    @Column(name = "password", nullable = false)
+    private String password;
 
-   @OneToMany(mappedBy = "spieler")
-   private Set<Highscore> highscore;
+    @Column(name = "current_score", nullable = false)
+    private long currentscore;
 
-   // Getter und Setter
-   public String getName() {
-      return name;
-   }
+    // Ein Spieler kann mehrere Spiele als Spieler1 haben
+    @OneToMany(mappedBy = "spieler1", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Spiel> spiele1;
 
-   public void setName(String name) {
-      this.name = name;
-   }
+    // Ein Spieler kann mehrere Spiele als Spieler2 haben
+    @OneToMany(mappedBy = "spieler2", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Spiel> spiele2;
 
-   public String getUserName() {
-      return userName;
-   }
+    // Ein Spieler kann mehrere Highscores haben
+    @OneToMany(mappedBy = "spieler", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Highscore> highscores;
 
-   public void setUserName(String userName) {
-      this.userName = userName;
-   }
+	public String getUsername() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-   public String getPassword() {
-      return password;
-   }
+	public String getPassword() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-   public void setPassword(String password) {
-      this.password = password;
-   }
-
-   public long getCurrentscore() {
-      return currentscore;
-   }
-
-   public void setCurrentscore(long currentscore) {
-      this.currentscore = currentscore;
-   }
-
-   public Set<Spiel> getSpiele1() {
-      return spiele1;
-   }
-
-   public void setSpiele1(Set<Spiel> spiele1) {
-      this.spiele1 = spiele1;
-   }
-
-   public Set<Spiel> getSpiele2() {
-      return spiele2;
-   }
-
-   public void setSpiele2(Set<Spiel> spiele2) {
-      this.spiele2 = spiele2;
-   }
-
-   public Set<Highscore> getHighscore() {
-      return highscore;
-   }
-
-   public void setHighscore(Set<Highscore> highscore) {
-      this.highscore = highscore;
-   }
-
-	public void setUsername(String username2) {
+	public void setPassword(String encode) {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	public void setEmail(String email) {
-		// TODO Auto-generated method stub
-		
-	}
+
+
 }
