@@ -25,7 +25,7 @@ public class GameService {
         return gameRepository.save(spiel);
     }
 
-    public Spielzug makeMove(Spielzug spielzug) {
-        return spielzugRepository.save(spielzug);
-    }
+ 	public Object makeMove(GameMoveDTO move) {
+		return spielzugRepository.save(move);
+	}
     }

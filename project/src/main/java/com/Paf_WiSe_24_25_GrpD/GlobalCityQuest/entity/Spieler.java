@@ -87,13 +87,13 @@ public class Spieler {
       this.highscore = highscore;
    }
 
-public void setUsername(String username2) {
-	// TODO Auto-generated method stub
+	public void setUsername(String username2) {
+		// TODO Auto-generated method stub
+		
+	}
 	
-}
-
-s void setEmail(String email) {
-	// TODO Auto-generated method stub
-	
-}
+	public void setEmail(String email) {
+		// TODO Auto-generated method stub
+		
+	}
 }

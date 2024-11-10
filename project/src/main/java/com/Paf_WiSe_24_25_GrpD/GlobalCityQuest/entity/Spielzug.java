@@ -1,4 +1,4 @@
-package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity
+package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
 import org.springframework.data.annotation.Id;
 
