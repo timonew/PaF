@@ -83,4 +83,15 @@ public class Spiel {
    public void setMapLayer(Set<MapLayer> mapLayer) {
       this.mapLayer = mapLayer;
    }
+
+	public void setRounds(int i) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setDifficulty(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -1,4 +1,4 @@
-package com.PaF_WiSe_24_25_Grp_D.Glocal.City.Quest;
+package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
 public class Highscore {
    private int scoreDifficultyLevel;

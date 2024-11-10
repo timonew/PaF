@@ -1,16 +1,19 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service;
 
+
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import  com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.RegisterRequestDTO;
-import  com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
-import  com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.exeption.UserNotFoundException;
-import  com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
+import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private SpielerRepository spielerRepository;
@@ -18,23 +21,25 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Spieler registerUser(RegisterRequestDTO request) {
-        Spieler spieler = new Spieler();
-        spieler.setUsername(request.getUsername());
-        spieler.setPassword(passwordEncoder.encode(request.getPassword()));
-        spieler.setEmail(request.getEmail());
-
-        return spielerRepository.save(spieler);
+    // Registrierung eines neuen Benutzers mit Passwortverschlüsselung
+    public Spieler registerUser(Spieler user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return spielerRepository.save(user);
     }
 
-    public Spieler findUserByUsername(String username) {
-        return spielerRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<Spieler> spielerOpt = spielerRepository.findByUserName(username);
+        if (spielerOpt.isEmpty()) {
+            throw new UsernameNotFoundException("Benutzer nicht gefunden: " + username);
+        }
+        Spieler spieler = spielerOpt.get();
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(spieler.getUserName())
+                .password(spieler.getPassword())
+                .roles("USER") // Rollen werden hier festgelegt, anpassbar falls benötigt
+                .build();
     }
-
-	public void loginUser() {
-		// TODO Auto-generated method stub
-		
-	}
 }
+
 
