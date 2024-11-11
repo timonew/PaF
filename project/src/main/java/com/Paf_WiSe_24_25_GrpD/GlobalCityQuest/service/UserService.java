@@ -1,6 +1,5 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service;
 
-
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +14,15 @@ import java.util.Optional;
 @Service
 public class UserService implements UserDetailsService {
 
-    @Autowired
-    private SpielerRepository spielerRepository;
+    private final SpielerRepository spielerRepository;
+    private final PasswordEncoder passwordEncoder;
 
+    // Dependency Injection über Konstruktor
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserService(SpielerRepository spielerRepository, PasswordEncoder passwordEncoder) {
+        this.spielerRepository = spielerRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     // Registrierung eines neuen Benutzers mit Passwortverschlüsselung
     public Spieler registerUser(Spieler user) {
@@ -41,10 +44,17 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
-	public Spieler authenticate(Object username, Object password) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    // Authentifizierungsmethode
+    public Spieler authenticate(String username, String password) {
+        Optional<Spieler> spielerOpt = spielerRepository.findByUserName(username);
+        if (spielerOpt.isPresent()) {
+            Spieler spieler = spielerOpt.get();
+            // Passwortüberprüfung
+            if (passwordEncoder.matches(password, spieler.getPassword())) {
+                return spieler;
+            }
+        }
+        // Wenn Authentifizierung fehlschlägt, null zurückgeben oder eine Exception werfen
+        return null;
+    }
 }
-
-

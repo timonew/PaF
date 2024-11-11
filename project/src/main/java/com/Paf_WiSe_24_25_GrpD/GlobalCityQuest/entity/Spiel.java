@@ -2,7 +2,7 @@ package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity;
 
 import java.util.Set;
 
-import org.springframework.data.annotation.Id;
+import jakarta.persistence.Id;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
