@@ -41,4 +41,9 @@ public class JwtUtil {
     private Claims extractClaims(String token) {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
+
+	public static boolean validateToken(String token) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
