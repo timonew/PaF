@@ -1,0 +1,31 @@
+Registrierungslogik:
+-Client: schickt Request mit eigenem Registrierungsforumular  an /user/Register
+-Server: userController gibt request an Userservice für Registrierungsvorgang weiter
+	-> userService.registerUser(spieler)
+	userservice gibt Status zurück
+	-> // Rückgabe der Antwort mit dem entsprechenden Status
+        if (status == RegistrationStatus.SUCCESS) {
+            return ResponseEntity.ok(status); // Benutzer erfolgreich registriert
+        } else {
+            return ResponseEntity.status(400).body(status); // Fehlerhafte Registrierung
+        } 
+-Client: wertet Status aus: bei ok-> Umleitung auf Loginseite
+			   nicht ok-> Status auswerten(USER_ALREADY_EXISTS oder INVALID_DATA)
+
+Loginlogik:
+-Client: schickt Request mit eigenem Loginformular  an /user/Login
+-Server: userController gibt request an Userservice für AuthVorgang weiter
+	-> userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword())
+	userservice gibt Status und JWT zurück
+	if (authStatus == AuthStatus.SUCCESS) {
+            // Wenn die Authentifizierung erfolgreich ist, JWT-Token generieren
+            String token = jwtUtil.generateToken(loginRequest.getUsername());
+            return ResponseEntity.ok(token); // Token wird zurückgegeben
+        } else {
+            // Falls die Authentifizierung fehlschlägt, den entsprechenden Status zurückgeben
+            return ResponseEntity.status(401).body(authStatus);
+        }
+-Client: wertet Status aus: bei ok-> Umleitung auf Lobbyseite; merken des JWT für weitere requests
+			   nicht ok-> Status auswerten(INVALID_CREDENTIALS,USER_NOT_FOUND)
+
+
