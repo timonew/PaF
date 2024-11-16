@@ -10,7 +10,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "your_secret_key"; // Verwende einen sicheren Schlüssel
+    private static String SECRET_KEY = "your_secret_key"; // Verwende einen sicheren Schlüssel
 
     // Methode zur Token-Erstellung
     public String generateToken(String username) {
@@ -28,7 +28,7 @@ public class JwtUtil {
     }
 
     // Methode zum Extrahieren des Benutzernamens aus dem Token
-    public String extractUsername(String token) {
+    public static String extractUsername(String token) {
         return extractClaims(token).getSubject();
     }
 
@@ -38,7 +38,7 @@ public class JwtUtil {
     }
 
     // Hilfsmethode zum Extrahieren der Claims
-    private Claims extractClaims(String token) {
+    private static Claims extractClaims(String token) {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
 
