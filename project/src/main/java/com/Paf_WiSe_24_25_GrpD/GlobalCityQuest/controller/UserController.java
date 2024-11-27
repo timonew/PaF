@@ -74,6 +74,8 @@ public class UserController {
 
     @GetMapping("/details")
     public ResponseEntity<?> getUserDetails(Authentication authentication) {
+    	System.out.println("Controller `/user/details` aufgerufen");
+
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
