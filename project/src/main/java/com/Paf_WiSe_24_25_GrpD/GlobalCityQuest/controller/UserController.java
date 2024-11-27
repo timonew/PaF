@@ -1,61 +1,92 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config.AuthStatus;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config.RegistrationStatus;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.LoginRequestDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.PlayerDetailsDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.RegisterRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.UserService;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.UserService;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    // Konstruktor-Injektion
+    public UserController(UserService userService, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+    }
 
-    /**
-     * Registrierung eines neuen Benutzers.
-     *
-     * @param spieler Die Daten des Benutzers.
-     * @return Der Status der Registrierung.
-     */
     @PostMapping("/register")
-    public ResponseEntity<RegistrationStatus> registerUser(@RequestBody Spieler spieler) {
-        // Aufruf der UserService-Methoden zur Registrierung und Rückgabe des Status
-        RegistrationStatus status = userService.registerUser(spieler);
-        
-        // Rückgabe der Antwort mit dem entsprechenden Status
-        if (status == RegistrationStatus.SUCCESS) {
-            return ResponseEntity.ok(status); // Benutzer erfolgreich registriert
-        } else {
-            return ResponseEntity.status(400).body(status); // Fehlerhafte Registrierung
+    public ResponseEntity<RegistrationStatus> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
+        try {
+            // Spieler-Objekt aus DTO erstellen
+            Spieler spieler = new Spieler();
+            spieler.setName(registerRequestDTO.getName());
+            spieler.setUserName(registerRequestDTO.getUserName());
+            spieler.setPassword(registerRequestDTO.getPassword());
+            spieler.setCurrentscore(0); // Initialisieren des Scores
+
+            // Registrierung des Benutzers
+            RegistrationStatus status = userService.registerUser(spieler);
+
+            if (status == RegistrationStatus.SUCCESS) {
+                return ResponseEntity.ok(status);
+            } else {
+                return ResponseEntity.status(400).body(status);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(RegistrationStatus.ERROR);
         }
     }
 
-    /**
-     * Login eines Benutzers.
-     *
-     * @param loginRequest Die Login-Daten des Benutzers.
-     * @return JWT-Token bei Erfolg oder Authentifizierungsstatus bei Fehler.
-     */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Spieler loginRequest) {
-        // Authentifizierung über den UserService
-        AuthStatus authStatus = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
-
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO) {
+        // Logge den eingehenden Request
+        System.out.println("Login-Anfrage für Benutzer: " + loginRequestDTO.getUserName());
+        
+        AuthStatus authStatus = userService.authenticate(
+            loginRequestDTO.getUserName(),
+            loginRequestDTO.getPassword()
+        );
+        
+        // Logge den Authentifizierungsstatus
+        System.out.println("Authentifizierungsstatus: " + authStatus);
+        
         if (authStatus == AuthStatus.SUCCESS) {
-            // Wenn die Authentifizierung erfolgreich ist, JWT-Token generieren
-            String token = jwtUtil.generateToken(loginRequest.getUsername());
-            return ResponseEntity.ok(token); // Token wird zurückgegeben
+            String token = jwtUtil.generateToken(loginRequestDTO.getUserName());
+            System.out.println("Token erfolgreich generiert für Benutzer: " + loginRequestDTO.getUserName());
+            return ResponseEntity.ok(token);
         } else {
-            // Falls die Authentifizierung fehlschlägt, den entsprechenden Status zurückgeben
+            System.out.println("Login fehlgeschlagen für Benutzer: " + loginRequestDTO.getUserName() + " mit Status: " + authStatus);
             return ResponseEntity.status(401).body(authStatus);
+        }
+    }
+
+
+    @GetMapping("/details")
+    public ResponseEntity<?> getUserDetails(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        try {
+            // Benutzername aus dem Security-Kontext holen (dieser wird nach der JWT-Validierung gesetzt)
+            String username = authentication.getName();  // Benutzername des authentifizierten Benutzers
+
+            // PlayerDetailsDTO anhand des Benutzernamens abrufen
+            PlayerDetailsDTO playerDetails = userService.getPlayerDetailsByUsername(username);
+            return ResponseEntity.ok(playerDetails);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error retrieving user details");
         }
     }
 }

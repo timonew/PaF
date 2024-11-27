@@ -6,5 +6,6 @@ package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config;
 public enum AuthStatus {
     SUCCESS,                 // Authentifizierung erfolgreich
     INVALID_CREDENTIALS,     // Ungültige Zugangsdaten
-    USER_NOT_FOUND           // Benutzername existiert nicht
+    USER_NOT_FOUND,           // Benutzername existiert nicht
+    UNAUTHORIZED
 }

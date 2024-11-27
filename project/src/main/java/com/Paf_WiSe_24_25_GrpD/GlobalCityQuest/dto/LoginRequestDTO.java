@@ -1,19 +1,24 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-
 public class LoginRequestDTO {
 
-    
-    private String username;
+    private String userName; // Benutzername
+    private String password; // Passwort
 
-    
-    private String password;
+    // Getter und Setter
+    public String getUserName() {
+        return userName;
+    }
 
-  
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
-

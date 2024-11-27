@@ -7,4 +7,5 @@ public enum RegistrationStatus {
     SUCCESS,                // Registrierung erfolgreich
     USER_ALREADY_EXISTS,    // Benutzername bereits vergeben
     INVALID_DATA            // Ungültige Eingabedaten
+, ERROR
 }

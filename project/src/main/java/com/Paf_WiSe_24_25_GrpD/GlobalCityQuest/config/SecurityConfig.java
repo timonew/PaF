@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtRequestFilter;
 
 @Configuration
-@EnableMethodSecurity  // Moderne Methode zur Aktivierung von Methodensicherheit
+@EnableMethodSecurity // Ermöglicht die Verwendung von Annotationen wie @PreAuthorize
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
@@ -26,20 +26,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Disable CSRF (für REST APIs)
-        http.csrf().disable()
+        http
+            .csrf(csrf -> csrf.disable()) // Deaktiviert CSRF, da wir eine REST-API verwenden
+            .cors(cors -> cors.configure(http)) // Aktiviert CORS
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/user/register", "/user/login").permitAll() // Zugriff auf Registrierung und Login erlauben
+                .anyRequest().authenticated() // Alle anderen Endpunkte erfordern Authentifizierung
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Keine Sessions, da JWT verwendet wird
+            );
 
-            // Autorisierungsregeln definieren
-            .authorizeRequests()
-            .requestMatchers("/user/login", "/user/register").permitAll()  // Login und Registrierung für alle zugänglich
-            .anyRequest().authenticated()  // Alle anderen Endpunkte müssen authentifiziert sein
-
-            // Session-Verwaltung: JWT erfordert keine Sessions
-            .and()
-            .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS);  // Keine Sessions werden erstellt
-
-        // JWT-Filter vor UsernamePasswordAuthenticationFilter einfügen
+        // Hinzufügen des JWT-Filters vor UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
