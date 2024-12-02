@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Root from './components/Root';
 import Login from './components/Login';
 import Register from './components/Register';
+import Game from "./components/Game";
 import Lobby from './components/Lobby'; // Stellen Sie sicher, dass Sie die Lobby-Komponente importieren
 
 // ProtectedRoute-Komponente: Umleitung, falls der Benutzer nicht authentifiziert ist
@@ -24,6 +25,8 @@ const App = () => {
 
                 {/* Registrierungs-Route */}
                 <Route path="/register" element={<Register />} />
+        
+                <Route path="/game/:gameId" element={<Game />} />
 
                 {/* Protected Lobby-Route: Nur zugänglich, wenn ein JWT-Token im localStorage vorhanden ist */}
                 <Route 

@@ -16,7 +16,7 @@ public class WebConfig {
 	            public void addCorsMappings(CorsRegistry registry) {
 	                registry.addMapping("/**")
 	                        .allowedOrigins("http://localhost:3000") // Erlaube Anfragen nur von deinem Frontend
-	                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Erlaube spezifische Methoden
+	                        .allowedMethods("GET", "POST", "PUT", "DELETE")
 	                        .allowedHeaders("*") // Erlaube alle Header
 	                        .allowCredentials(true); // Erlaube Cookies/Authentifizierungsinformationen
 	            }

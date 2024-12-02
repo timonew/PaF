@@ -18,7 +18,7 @@ function Login() {
    const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const response = await axios.post("http://localhost:8080/user/login", formData);
+        const response = await axios.post("http://localhost:8080/rest/user/login", formData);
         console.log("Login response:", response.data);  // Der Token als String
         if (response.data) {  // Wenn ein Token im Antwort-Body vorhanden ist
             localStorage.setItem("jwtToken", response.data);  // Speichert den Token direkt

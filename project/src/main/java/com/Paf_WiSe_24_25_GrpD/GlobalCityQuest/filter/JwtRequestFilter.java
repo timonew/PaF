@@ -25,9 +25,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String authorizationHeader = request.getHeader("Authorization");
+        String requestPath = request.getRequestURI();
 
+        System.out.println("Angefragter Pfad: " + requestPath);
+
+        // Ausnahme für WebSocket-Endpunkte
+        if (requestPath.startsWith("/ws")) {
+            System.out.println("WebSocket-Anfrage erkannt. Keine Authentifizierung erforderlich.");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Prüfung auf JWT-Header
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwt = authorizationHeader.substring(7);
+            System.out.println("Token: " + jwt);
 
             try {
                 String username = JwtUtil.extractUsername(jwt);
@@ -38,7 +50,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
                     System.out.println("JWT validiert und Benutzer im Security-Kontext gesetzt: " + username);
                 } else {
-                    System.out.println("JWT ist ungültig oder abgelaufen");
+                    System.out.println("JWT ist ungültig oder abgelaufen.");
                 }
             } catch (Exception e) {
                 System.out.println("Fehler bei der JWT-Validierung: " + e.getMessage());
@@ -47,9 +59,5 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Weiterleitung der Anfrage an die nächste Station in der Filterkette
         chain.doFilter(request, response);
-
-        System.out.println("Anfrage wird an den Controller weitergeleitet");
     }
-
-
 }
