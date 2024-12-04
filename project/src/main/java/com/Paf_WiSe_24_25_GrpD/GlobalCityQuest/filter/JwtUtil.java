@@ -38,7 +38,7 @@ public class JwtUtil {
     }
 
     // Methode zum Extrahieren des Benutzernamens aus dem Token
-    public static String extractUsername(String token) {
+    public String extractUsername(String token) {
         return extractClaims(token).getSubject();
     }
 

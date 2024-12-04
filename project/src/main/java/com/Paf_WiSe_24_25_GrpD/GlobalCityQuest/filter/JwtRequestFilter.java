@@ -27,25 +27,28 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
         String requestPath = request.getRequestURI();
 
+        // Debug-Ausgabe des angefragten Pfads
         System.out.println("Angefragter Pfad: " + requestPath);
 
-        // Ausnahme für WebSocket-Endpunkte
-        if (requestPath.startsWith("/ws")) {
-            System.out.println("WebSocket-Anfrage erkannt. Keine Authentifizierung erforderlich.");
-            chain.doFilter(request, response);
-            return;
+        if (requestPath.startsWith("/websocket")) {
+               
+                chain.doFilter(request, response);
         }
 
-        // Prüfung auf JWT-Header
+        // Prüfung auf vorhandenen JWT-Header
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwt = authorizationHeader.substring(7);
             System.out.println("Token: " + jwt);
 
             try {
-                String username = JwtUtil.extractUsername(jwt);
+                // Extrahiere den Benutzernamen aus dem JWT
+                String username = jwtUtil.extractUsername(jwt);
+
+                // Validierung des JWT
                 if (jwtUtil.validateToken(jwt, username)) {
+                    // Erstelle ein Authentication-Token und setze es im Security-Kontext
                     UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>()); // Optionale Authorities hinzufügen
+                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>()); // Authorities können hier hinzugefügt werden
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
                     System.out.println("JWT validiert und Benutzer im Security-Kontext gesetzt: " + username);

@@ -30,7 +30,7 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.UserService;
 public class RestApiController {
 	
     @Autowired
-    private WebSocketController webSocketController;
+    //private WebSocketController webSocketController;
     
     private final UserService userService;
     private final JwtUtil jwtUtil;
@@ -155,7 +155,7 @@ public class RestApiController {
 
         // Wartende Spiele abrufen
         List<SimpleGameDTO> waitingGames = gameService.getWaitingGames();
-        webSocketController.broadcastWaitingGames();
+   
 
         System.out.println("Anzahl der wartenden Spiele: " + waitingGames.size());
         return ResponseEntity.ok(waitingGames);
