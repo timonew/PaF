@@ -30,7 +30,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // Deaktiviert CSRF, da wir eine REST-API verwenden
             .cors(cors -> cors.configure(http)) // Aktiviert CORS
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/rest/user/register", "/rest/user/login","/ws/*").permitAll() // Zugriff auf Registrierung und Login erlauben
+                .requestMatchers("/rest/user/register", "/rest/user/login","/websocket*").permitAll() // Zugriff auf Registrierung und Login erlauben
                 .anyRequest().authenticated() // Alle anderen Endpunkte erfordern Authentifizierung
             )
             .sessionManagement(session -> session
