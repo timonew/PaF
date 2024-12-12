@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtRequestFilter;
 
 @Configuration
-@EnableMethodSecurity // Ermöglicht die Verwendung von Annotationen wie @PreAuthorize
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
@@ -27,17 +27,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Deaktiviert CSRF, da wir eine REST-API verwenden
-            .cors(cors -> cors.configure(http)) // Aktiviert CORS
+            .csrf(csrf -> csrf.disable()) // CSRF deaktivieren
+            .cors(cors -> cors.configure(http)) // CORS aktivieren
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/rest/user/register", "/rest/user/login","/websocket*").permitAll() // Zugriff auf Registrierung und Login erlauben
-                .anyRequest().authenticated() // Alle anderen Endpunkte erfordern Authentifizierung
+                .requestMatchers(
+                    "/rest/user/register", 
+                    "/rest/user/login", 
+                    "/websocket/**" // Alle SockJS-Endpunkte erlauben
+                ).permitAll()
+                .anyRequest().authenticated() // Alle anderen Endpunkte benötigen Authentifizierung
             )
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Keine Sessions, da JWT verwendet wird
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Stateless, da JWT genutzt wird
             );
 
-        // Hinzufügen des JWT-Filters vor UsernamePasswordAuthenticationFilter
+        // JWT-Filter nur für nicht-SockJS-Anfragen hinzufügen
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

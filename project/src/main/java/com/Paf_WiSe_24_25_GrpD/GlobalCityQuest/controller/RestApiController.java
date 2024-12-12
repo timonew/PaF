@@ -9,14 +9,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config.AuthStatus;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config.RegistrationStatus;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameAnswerDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameStartDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameInitDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.LoginRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.PlayerDetailsDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.RegisterRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SimpleGameDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SpielDetailsDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.UpdateGameStatusDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.WaitingGameDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtUtil;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.GameService;
@@ -28,10 +30,10 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.UserService;
 @RestController
 @RequestMapping("/rest")
 public class RestApiController {
-	
-    @Autowired
-    //private WebSocketController webSocketController;
     
+    @Autowired
+    private WebSocketController webSocketController;
+
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final GameService gameService;
@@ -43,17 +45,16 @@ public class RestApiController {
         this.gameService = gameService;
     }
 
+    // Registrierung des Benutzers
     @PostMapping("/user/register")
     public ResponseEntity<RegistrationStatus> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
         try {
-            // Spieler-Objekt aus DTO erstellen
             Spieler spieler = new Spieler();
             spieler.setName(registerRequestDTO.getName());
             spieler.setUserName(registerRequestDTO.getUserName());
             spieler.setPassword(registerRequestDTO.getPassword());
             spieler.setCurrentscore(0); // Initialisieren des Scores
 
-            // Registrierung des Benutzers
             RegistrationStatus status = userService.registerUser(spieler);
 
             if (status == RegistrationStatus.SUCCESS) {
@@ -66,9 +67,9 @@ public class RestApiController {
         }
     }
 
+    // Login-Endpoint
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO) {
-        // Logge den eingehenden Request
         System.out.println("Login-Anfrage für Benutzer: " + loginRequestDTO.getUserName());
         
         AuthStatus authStatus = userService.authenticate(
@@ -76,138 +77,144 @@ public class RestApiController {
             loginRequestDTO.getPassword()
         );
         
-        // Logge den Authentifizierungsstatus
-        System.out.println("Authentifizierungsstatus: " + authStatus);
-        
         if (authStatus == AuthStatus.SUCCESS) {
             String token = jwtUtil.generateToken(loginRequestDTO.getUserName());
-            System.out.println("Token erfolgreich generiert für Benutzer: " + loginRequestDTO.getUserName());
             return ResponseEntity.ok(token);
         } else {
-            System.out.println("Login fehlgeschlagen für Benutzer: " + loginRequestDTO.getUserName() + " mit Status: " + authStatus);
             return ResponseEntity.status(401).body(authStatus);
         }
     }
 
-
+    // Benutzer-Details
     @GetMapping("/user/details")
     public ResponseEntity<?> getUserDetails(Authentication authentication) {
-    	System.out.println("Controller `/user/details` aufgerufen");
-
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
         try {
-            // Benutzername aus dem Security-Kontext holen (dieser wird nach der JWT-Validierung gesetzt)
-            String username = authentication.getName();  // Benutzername des authentifizierten Benutzers
-
-            // PlayerDetailsDTO anhand des Benutzernamens abrufen
+            String username = authentication.getName();
             PlayerDetailsDTO playerDetails = userService.getPlayerDetailsByUsername(username);
             return ResponseEntity.ok(playerDetails);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error retrieving user details");
         }
     }
-    
+
+    // Start eines Spiels
     @PostMapping("/game/start")
-    public ResponseEntity<WaitingGameDTO> startGame(@RequestBody GameStartDTO gameStartDTO, Authentication authentication) {
-    	System.out.println("Controller `/game/start` aufgerufen");
-        // Ausgabe der empfangenen Daten in der Konsole
-        System.out.println("Eingehende Daten: " + gameStartDTO);
-        
-        // Falls Authentication benötigt wird, hier die Prüfung lassen:
+    public ResponseEntity<SimpleGameDTO> startGame(@RequestBody GameStartDTO gameStartDTO, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            System.out.println("Unauthenticated Zugriff erkannt.");
             return ResponseEntity.status(401).build();
         }
 
         String username = authentication.getName();
-        WaitingGameDTO dto = gameService.startGame(gameStartDTO, username);
+        SimpleGameDTO dto = gameService.startGame(gameStartDTO, username);
+
+        // WebSocket: Sende die Spielstartnachricht an alle Spieler, die das Spiel beobachten
+
+        
         return ResponseEntity.ok(dto);
-  
-
     }
-    
-    @PostMapping("/game/updateStatus")
-    public ResponseEntity<String> updateGameStatus(@RequestBody UpdateGameStatusDTO updateGameStatusDTO) {
-        if (updateGameStatusDTO == null || updateGameStatusDTO.getGameId() == null || updateGameStatusDTO.getNewStatus() == null) {
-            throw new IllegalArgumentException("UpdateGameStatusDTO, GameId oder NewStatus darf nicht null sein.");
-        }
-
-        String status = gameService.setGameStatus(updateGameStatusDTO);
-        return ResponseEntity.ok("Spielstatus wurde erfolgreich aktualisiert: " + status);
-    }
-
+    // Spiele anzeigen, die auf Spieler warten
     @GetMapping("/game/waiting")
     public ResponseEntity<List<SimpleGameDTO>> getWaitingGames(Authentication authentication) {
-        System.out.println("Controller `/game/waiting` aufgerufen");
-
-        // Falls Authentication benötigt wird, hier die Prüfung
         if (authentication == null || !authentication.isAuthenticated()) {
-            System.out.println("Unauthenticated Zugriff erkannt.");
             return ResponseEntity.status(401).build();
         }
 
-        // Den Benutzernamen der authentifizierten Person abrufen
-        String username = authentication.getName();
-        System.out.println("Authentifizierter Benutzer: " + username);
 
-        // Wartende Spiele abrufen
         List<SimpleGameDTO> waitingGames = gameService.getWaitingGames();
-   
+        // WebSocket: Sende die Liste der wartenden Spiele an den Client
+        webSocketController.sendWaitingGames(waitingGames);
 
-        System.out.println("Anzahl der wartenden Spiele: " + waitingGames.size());
         return ResponseEntity.ok(waitingGames);
     }
 
-    
-    
-
-    /**
-     * Tritt einem bestehenden Spiel bei.
-     */
-    @PostMapping("/game/join")
-    public ResponseEntity<String> joinGame(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
+    @PostMapping("/game/joinrequest")
+    public ResponseEntity<String> joinRequest(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
         Long gameId = requestBody.get("gameId");
-        if (gameId == null) {
-            return ResponseEntity.status(400).body("Spiel-ID fehlt");
+        Long player1Id = requestBody.get("player1Id");
+
+        if (gameId == null || player1Id == null) {
+            return ResponseEntity.status(400).body("Spiel-ID oder Spieler 1 ID fehlt");
         }
 
         String username = authentication.getName();
-        gameService.joinGame(gameId, username);
 
-        return ResponseEntity.ok("Spiel erfolgreich beigetreten");
+        // Hier kannst du den WebSocket-Controller anrufen, um die Nachricht zu senden
+        GameRequestDTO gameRequest = new GameRequestDTO(username, gameId);  // Beispiel DTO anpassen
+        webSocketController.sendGameRequestToUser(player1Id, gameRequest);
+
+        return ResponseEntity.ok("Spielanfrage erfolgreich gesendet");
     }
 
-        
-
-    @GetMapping("/game/{spielId}")
-    public ResponseEntity<Object> getSpielDetails(@PathVariable Long spielId, Authentication authentication) {
-        // Überprüfung, ob der Benutzer authentifiziert ist
+    @PostMapping("/game/requestAnswer")
+    public ResponseEntity<String> requestAnswer(@RequestBody Map<String, String> requestBody, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
-        try {
-            // Spielinformationen über den GameService abrufen
-            SpielDetailsDTO spielDetails = gameService.getSpielDetails(spielId);
-            
-            // Die Spiel-Details in der Konsole ausgeben
-            System.out.println("Spiel Details: " + spielDetails);  // Hier werden die Spielinformationen in der Konsole ausgegeben
+        String gameIdStr = requestBody.get("gameId");
+        String player2Name = requestBody.get("player2Name");
+        String decision = requestBody.get("decision");
+        String player1Name = authentication.getName();
 
-            // Rückgabe der Spielinformationen als Response
-            return ResponseEntity.ok(spielDetails);
-        } catch (IllegalArgumentException e) {
-            // Fehlerbehandlung: Spiel nicht gefunden
-            return ResponseEntity.status(404).body(Map.of("error", "Spiel nicht gefunden"));
+        // Überprüfen, ob gameId konvertiert werden kann
+        Long gameId;
+        try {
+            gameId = Long.parseLong(gameIdStr);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400).body("Invalid gameId format");
+        }
+
+        boolean gameAccepted = false;
+        Long player1Id = userService.getIdByUsername(player1Name);
+        Long player2Id = userService.getIdByUsername(player2Name);
+
+        // Überprüfen, ob die Entscheidung akzeptiert wurde
+        if ("requestAccepted".equalsIgnoreCase(decision)) {
+            try {
+                gameAccepted = true;
+                // Spielanfrage akzeptieren und Spieler zuweisen
+                gameService.acceptGameRequest(gameId, player2Name);
+
+                // DTO erstellen und über WebSocket senden
+                GameAnswerDTO gameAnswerDTO = new GameAnswerDTO(gameAccepted, gameId);
+                webSocketController.sendGameAnswerToUser(gameAnswerDTO, player1Id);
+                webSocketController.sendGameAnswerToUser(gameAnswerDTO, player2Id);
+                
+                gameService.gameInit(gameId);
+                return ResponseEntity.ok("Spiel erfolgreich gestartet.");
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(400).body("Fehler: " + e.getMessage());
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body("Serverfehler: " + e.getMessage());
+            }
+        } else {
+            // DTO für abgelehnte Anfrage erstellen
+            GameAnswerDTO gameAnswerDTO = new GameAnswerDTO(gameAccepted, gameId);
+            webSocketController.sendGameAnswerToUser(gameAnswerDTO, player1Id);
+            webSocketController.sendGameAnswerToUser(gameAnswerDTO, player2Id);
+
+            return ResponseEntity.ok("Spielanfrage wurde abgelehnt");
         }
     }
 
-
+    @GetMapping("/game/init")
+    public ResponseEntity<GameInitDTO> getGameInit(@RequestParam Long gameId) {
+    	System.out.println("GET /game/init called with gameId: " + gameId); // Log the incoming request
+         try {
+        	 GameInitDTO gameInitDTO = gameService.getgameInitDTO(gameId);
+            System.out.println("Game details successfully fetched for gameId " + gameId + ": " + gameInitDTO); 
+            return ResponseEntity.ok(gameInitDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
 
 }

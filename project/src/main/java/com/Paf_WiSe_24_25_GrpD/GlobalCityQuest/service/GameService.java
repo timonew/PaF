@@ -1,45 +1,48 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service;
 
-
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameStartDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SimpleGameDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SpielDetailsDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.UpdateGameStatusDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.WaitingGameDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller.WebSocketController;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.*;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spiel;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Stadt;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.MapLayerRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
-
-import lombok.Getter;
-import lombok.Setter;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielzugRepository;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.StadtRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
-
-@Getter
-@Setter
 @Service
 public class GameService {
+	
+	 @Autowired
+	 private StadtRepository stadtRepository;
 
     @Autowired
     private SpielRepository spielRepository;
 
     @Autowired
     private SpielerRepository spielerRepository;
-    
+
     @Autowired
     private MapLayerRepository mapLayerRepository;
-
     
-       /**
+    @Autowired
+    private SpielzugRepository spielzugRepository;
+
+    @Autowired
+    private WebSocketController webSocketController; // 
+    /**
      * Spieler tritt einem bestehenden Spiel bei.
      * @param gameId ID des Spiels.
      * @param username Benutzername des Spielers.
@@ -59,11 +62,9 @@ public class GameService {
         spiel.setStatus("in_process");
         spielRepository.save(spiel);
 
+           // Aktualisierte Liste der wartenden Spiele broadcasten
+        getWaitingGames();
     }
-
-   
-
-   
 
     /**
      * Holt den Status eines Spiels.
@@ -75,85 +76,82 @@ public class GameService {
         return optionalSpiel.map(Spiel::getStatus)
                 .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
     }
-    
+
     /**
      * Aktualisiert den Status eines Spiels.
-     *
      * @param updateGameStatusDTO Daten zur Aktualisierung des Spielstatus.
      * @return Neuer Status des Spiels.
-     * @throws IllegalArgumentException falls das Spiel nicht gefunden wird.
      */
     public String setGameStatus(UpdateGameStatusDTO updateGameStatusDTO) {
         if (updateGameStatusDTO == null || updateGameStatusDTO.getGameId() == null || updateGameStatusDTO.getNewStatus() == null) {
             throw new IllegalArgumentException("UpdateGameStatusDTO, GameId oder NewStatus darf nicht null sein.");
         }
 
-        Long gameId = updateGameStatusDTO.getGameId(); // Spiel-ID aus DTO extrahieren
-        String newStatus = updateGameStatusDTO.getNewStatus(); // Neuer Status aus DTO extrahieren
+        Long gameId = updateGameStatusDTO.getGameId();
+        String newStatus = updateGameStatusDTO.getNewStatus();
 
-        // Spiel im Repository suchen
-        Optional<Spiel> optionalSpiel = spielRepository.findById(gameId);
-
-        // Wenn das Spiel existiert, Status aktualisieren und speichern
-        Spiel spiel = optionalSpiel.orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
+        Spiel spiel = spielRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
+        
         spiel.setStatus(newStatus);
-        spielRepository.save(spiel); // Änderungen speichern
+        spielRepository.save(spiel);
 
-        return spiel.getStatus(); // Aktualisierten Status zurückgeben
+        // Aktualisierte Liste der wartenden Spiele broadcasten
+        getWaitingGames();
+
+        return spiel.getStatus();
     }
 
-
-    public WaitingGameDTO startGame(GameStartDTO gameStartDTO, String username) {
-        // Spieler anhand des Benutzernamens aus JWT finden
+    public SimpleGameDTO startGame(GameStartDTO gameStartDTO, String username) {
         Spieler spieler1 = spielerRepository.findByUserName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Spieler nicht gefunden: " + username));
 
-        // Neues Spiel-Objekt erstellen
         Spiel neuesSpiel = new Spiel();
         neuesSpiel.setContinent(gameStartDTO.getContinent());
         neuesSpiel.setDifficultyLevel(gameStartDTO.getDifficulty());
         neuesSpiel.setSpieler1(spieler1);
-        neuesSpiel.setStatus("waiting"); // Spielstatus initialisieren
+        neuesSpiel.setStatus("waiting");
 
-        // Spiel in der Datenbank speichern
+        
         spielRepository.save(neuesSpiel);
 
 
-        // Daten für die Rückgabe vorbereiten
-        WaitingGameDTO waitingGameDTO = new WaitingGameDTO();
-        waitingGameDTO.setGameId(neuesSpiel.getId());
-        waitingGameDTO.setContinent(neuesSpiel.getContinent());
-        waitingGameDTO.setDifficultyLevel(neuesSpiel.getDifficultyLevel());
-        waitingGameDTO.setStatus(neuesSpiel.getStatus());
+        // Aktualisierte Liste der wartenden Spiele broadcasten
+        getWaitingGames();
+        SimpleGameDTO dto = new SimpleGameDTO();
+        dto.setId(neuesSpiel.getId());
+        dto.setSpieler1Name(neuesSpiel.getSpieler1().getUserName());
+        dto.setSpieler1ID(neuesSpiel.getSpieler1().getId());
+        dto.setContinent(neuesSpiel.getContinent());
+        dto.setDifficultyLevel(neuesSpiel.getDifficultyLevel());
+        return dto;
 
-        return waitingGameDTO;
     }
 
     public List<SimpleGameDTO> getWaitingGames() {
         List<Spiel> waitingGames = spielRepository.findByStatus("waiting");
-        return waitingGames.stream()
+        List<SimpleGameDTO> waitingGamesDTO = waitingGames.stream()
                 .map(game -> {
                     SimpleGameDTO dto = new SimpleGameDTO();
                     dto.setId(game.getId());
                     dto.setSpieler1Name(game.getSpieler1().getUserName());
+                    dto.setSpieler1ID(game.getSpieler1().getId());
                     dto.setContinent(game.getContinent());
                     dto.setDifficultyLevel(game.getDifficultyLevel());
                     return dto;
                 })
                 .collect(Collectors.toList());
-        		
+
+        // Broadcast der aktualisierten Spieleliste an verbundene WebSocket-Clients
+        webSocketController.sendWaitingGames(waitingGamesDTO);
+
+        return waitingGamesDTO;
     }
-    
-
-
- ;
 
     public SpielDetailsDTO getSpielDetails(Long spielId) {
-        // Spielinformationen abrufen (dieser Teil bleibt wie vorher)
         Spiel spiel = spielRepository.findById(spielId)
                 .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden"));
 
-        // Erstelle DTO für Spielinformationen
         SpielDetailsDTO spielDetailsDTO = new SpielDetailsDTO();
         spielDetailsDTO.setSpielId(spiel.getId());
         spielDetailsDTO.setContinent(spiel.getContinent());
@@ -161,20 +159,147 @@ public class GameService {
         spielDetailsDTO.setStatus(spiel.getStatus());
         spielDetailsDTO.setSpieler1Name(spiel.getSpieler1().getUserName());
         spielDetailsDTO.setSpieler2Name(spiel.getSpieler2() != null ? spiel.getSpieler2().getUserName() : null);
-
-		/*
-		 * // Karte aus MapLayer suchen (Kontinent und DifficultyLevel 0) MapLayer
-		 * mapLayer =
-		 * mapLayerRepository.findByMapContinentAndMapDifficultyLevel(spiel.getContinent
-		 * (), 0); if (mapLayer != null) { // Lade das Bild als Byte-Array File mapFile
-		 * = new File(mapLayerDirectory + "/" + mapLayer.getLayerPath()); try { byte[]
-		 * mapImageBytes = Files.readAllBytes(mapFile.toPath()); // Füge die Bilddaten
-		 * als Byte-Array ins DTO hinzu spielDetailsDTO.setMapImage(mapImageBytes); }
-		 * catch (IOException e) { throw new
-		 * RuntimeException("Fehler beim Laden der Karte", e); } }
-		 */
-
+        
         return spielDetailsDTO;
+    }
+    
+    /**
+     * Spieler 2 sendet eine Anfrage an Spieler 1.
+     * @param gameId ID des Spiels.
+     * @param requestingPlayer Benutzername des anfragenden Spielers (Spieler 2).
+     * @return Das erstellte GameRequestDTO.
+     */
+    public GameRequestDTO sendGameRequest(Long gameId, String requestingPlayer) {
+        // Spiel und Spieler laden
+        Spiel spiel = spielRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
+
+        Spieler spieler2 = spielerRepository.findByUserName(requestingPlayer)
+                .orElseThrow(() -> new UsernameNotFoundException("Spieler nicht gefunden: " + requestingPlayer));
+
+        // Sicherstellen, dass das Spiel noch verfügbar ist
+        if (!spiel.getStatus().equals("waiting")) {
+            throw new IllegalStateException("Spiel ist nicht verfügbar: " + gameId);
+        }
+
+        // GameRequestDTO erstellen
+        GameRequestDTO requestDTO = new GameRequestDTO(requestingPlayer, gameId);
+        requestDTO.setGameId(spiel.getId());
+        requestDTO.setRequestingPlayer(spieler2.getUserName());
+
+        return requestDTO;
+    }
+
+    @Transactional
+    public void acceptGameRequest(Long gameId, String player2Name) {
+        // 1. Spiel finden
+        Spiel spiel = spielRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden"));
+
+        // 2. Spieler 2 finden
+        Spieler spieler2 = spielerRepository.findByUserName(player2Name)
+                .orElseThrow(() -> new IllegalArgumentException("Spieler 2 nicht gefunden"));
+
+        // 3. Status auf IN_PROCESS setzen und Spieler 2 zuweisen
+        spiel.setStatus("IN_PROCESS");
+        spiel.setSpieler2(spieler2);
+
+        // Änderungen speichern
+        spielRepository.save(spiel);
+    }
+
+    @Transactional
+    public void gameInit(Long gameId) {
+        System.out.println("gameInit called with gameId: " + gameId);
+
+        // 1. Spiel finden
+        Spiel spiel = spielRepository.findById(gameId)
+                .orElseThrow(() -> {
+                    System.out.println("Spiel mit gameId " + gameId + " nicht gefunden.");
+                    return new IllegalArgumentException("Spiel nicht gefunden");
+                });
+
+        System.out.println("Spiel gefunden: " + spiel);
+
+        // 2. Überprüfen, ob Spielzüge existieren, wenn nicht, dann erstellen
+        List<Spielzug> spielzüge = spielzugRepository.findBySpielId(gameId);
+        System.out.println("Gefundene Spielzüge für gameId " + gameId + ": " + spielzüge.size());
+
+        if (spielzüge.isEmpty()) {
+            System.out.println("Keine Spielzüge gefunden, neue werden erstellt.");
+            List<Stadt> verfügbareStädte = stadtRepository.findByContinentAndDifficultyLevel(
+                    spiel.getContinent(), spiel.getDifficultyLevel());
+
+            System.out.println("Verfügbare Städte für Kontinent " + spiel.getContinent() +
+                    " und Schwierigkeitsgrad " + spiel.getDifficultyLevel() + ": " + verfügbareStädte.size());
+
+            Random random = new Random();
+            List<Stadt> ausgewählteStädte = random.ints(0, verfügbareStädte.size())
+                    .distinct()
+                    .limit(10)
+                    .mapToObj(verfügbareStädte::get)
+                    .collect(Collectors.toList());
+
+            System.out.println("Ausgewählte Städte: " + ausgewählteStädte);
+
+            spielzüge = ausgewählteStädte.stream()
+                    .map(stadt -> {
+                        Spielzug spielzug = new Spielzug();
+                        spielzug.setSpiel(spiel);
+                        spielzug.setStadt(stadt);
+                        return spielzug;
+                    })
+                    .collect(Collectors.toList());
+
+            // Spielzüge speichern
+            spielzugRepository.saveAll(spielzüge);
+            System.out.println("Neue Spielzüge gespeichert: " + spielzüge.size());
+        }
+
+    }
+
+    public GameInitDTO getgameInitDTO(Long gameId) {
+        System.out.println("called getGameInitDTO: " + gameId); // Log the incoming request
+
+        // Hole das Spiel aus der Datenbank
+        Spiel spiel = spielRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
+        System.out.println("Spiel gefunden: " + spiel);
+
+        // Hole die Spielzüge für das Spiel
+        List<Spielzug> spielzüge = spielzugRepository.findBySpielId(gameId);
+        System.out.println("Spielzüge gefunden: " + spielzüge.size());
+
+        // 4. DTO erstellen
+        GameInitDTO dto = new GameInitDTO();
+        dto.setGameId(spiel.getId());
+        dto.setStatus(spiel.getStatus());
+
+        // Falls keine Spielzüge vorhanden sind, könnte dies ein Hinweis auf ein Problem sein
+        if (spielzüge.isEmpty()) {
+            System.out.println("Keine Spielzüge für das Spiel mit ID " + gameId);
+        }
+
+        dto.setSpielzuege(spielzüge.stream().map(spielzug -> {
+            SpielzugDTO spielzugDTO = new SpielzugDTO();
+            spielzugDTO.setSpielZugId(spielzug.getId());
+            // Stadt aus dem Spielzug abrufen
+            Stadt stadt = spielzug.getStadt();
+            if (stadt != null) {
+                // ID, Name und Koordinaten der Stadt setzen
+                spielzugDTO.setStadtId(stadt.getId());
+                spielzugDTO.setStadtName(stadt.getStadtName());
+                spielzugDTO.setKoordinaten(stadt.getKoordinaten());
+            } else {
+                System.err.println("Warnung: Kein Stadtobjekt für Spielzug mit ID " + spielzug.getId());
+            }
+
+            return spielzugDTO;
+        }).collect(Collectors.toList()));
+
+        System.out.println("GameInitDTO erstellt: " + dto);
+
+        return dto;
     }
 
 }

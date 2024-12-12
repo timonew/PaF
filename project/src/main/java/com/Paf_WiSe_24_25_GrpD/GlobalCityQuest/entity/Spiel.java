@@ -112,4 +112,5 @@ public class Spiel {
     public boolean isFinished() {
         return "finished".equalsIgnoreCase(this.status);
     }
+
 }

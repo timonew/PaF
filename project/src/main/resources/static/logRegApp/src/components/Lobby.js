@@ -1,150 +1,191 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
 import axios from "axios";
 
 const Lobby = () => {
-  const [userDetails, setUserDetails] = useState(null); // Benutzer-Details
-  const [loading, setLoading] = useState(true); // Ladezustand
-  const [waitingGames, setWaitingGames] = useState([]); // Wartende Spiele
-  const [difficulty, setDifficulty] = useState(1); // Schwierigkeitsgrad
-  const [continent, setContinent] = useState("Europe"); // Kontinent
+  const [userDetails, setUserDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [waitingGames, setWaitingGames] = useState([]);
+  const [difficulty, setDifficulty] = useState(1);
+  const [continent, setContinent] = useState("Europe");
+  const [gameRequest, setGameRequest] = useState(null);
+  const [gameRequestsAnswer, setGameRequestsAnswer] = useState(null);
+  const [countdown, setCountdown] = useState(null); // Neues State für den Countdown
+  const [message, setMessage] = useState(""); // Neues State für die Nachricht
   const navigate = useNavigate();
+  let stompClient = null;
 
   const jwtToken = localStorage.getItem("jwtToken");
 
-  // Überprüfen des JWT-Tokens und Abrufen der Benutzer-Details
   useEffect(() => {
     if (!jwtToken) {
       navigate("/login");
       return;
     }
 
-    const fetchUserDetails = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/rest/user/details", {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
+        const userResponse = await axios.get("http://localhost:8080/rest/user/details", {
+          headers: { Authorization: `Bearer ${jwtToken}` },
         });
-        setUserDetails(response.data);
+        setUserDetails(userResponse.data);
+
+        const gameResponse = await axios.get("http://localhost:8080/rest/game/waiting", {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+        });
+        setWaitingGames(gameResponse.data);
+
+        setupWebSocket(userResponse.data.userID);
       } catch (error) {
-        if (error.response && error.response.status === 403) {
-          alert("Zugriff verweigert. Bitte sicherstellen, dass du eingeloggt bist.");
-        } else {
-          console.error("Fehler beim Abrufen der Benutzerdetails:", error);
-        }
+        console.error("Fehler beim Abrufen der Daten:", error);
         navigate("/login");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserDetails();
-    fetchWaitingGames();
+    fetchInitialData();
+
+    return () => disconnectWebSocket();
   }, [jwtToken, navigate]);
 
-  // Wartende Spiele abrufen
-  const fetchWaitingGames = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/rest/game/waiting", {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
+  const setupWebSocket = (userID) => {
+    const socket = new SockJS("http://localhost:8080/websocket");
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+      console.log("WebSocket-Verbindung hergestellt");
+
+      if (stompClient.connected) {
+        stompClient.subscribe("/topic/waitingGames", (message) => {
+          const games = JSON.parse(message.body);
+          setWaitingGames(games);
+        });
+
+        stompClient.subscribe(`/topic/user/${userID}/gameRequests`, (message) => {
+          const request = JSON.parse(message.body);
+          setGameRequest(request);
+        });
+
+        stompClient.subscribe(`/topic/user/${userID}/gameRequestsAnswer`, (message) => {
+          const gameRequestsAnswer = JSON.parse(message.body);
+          setGameRequestsAnswer(gameRequestsAnswer);
+
+          if (gameRequestsAnswer.gameAccepted === false) {
+            setMessage(`Spielanfrage für Spiel ${gameRequestsAnswer.gameId} wurde abgelehnt.`);
+            setCountdown(null); // Countdown zurücksetzen
+          } else {
+            setMessage(`Spielanfrage akzeptiert! Das Spiel startet in 5 Sekunden.`);
+            setCountdown(5); // Countdown auf 5 setzen
+          }
+        });
+      } else {
+        console.error("StompClient ist nicht verbunden!");
+      }
+    });
+
+    stompClient.onStompError = (frame) => {
+      console.error(`WebSocket Broker Error: ${frame.headers["message"]}`);
+    };
+
+    stompClient.onWebSocketError = (event) => {
+      console.error(`WebSocket Error: ${event.message || "Unbekannter Fehler"}`);
+    };
+  };
+
+  const disconnectWebSocket = () => {
+    if (stompClient) {
+      stompClient.disconnect(() => {
+        console.log("WebSocket-Verbindung geschlossen");
       });
-      setWaitingGames(response.data);
-    } catch (error) {
-      console.error("Fehler beim Abrufen der wartenden Spiele:", error);
     }
   };
 
-  // Spiel starten
+  // Countdown-Logik
+  useEffect(() => {
+    if (countdown !== null && countdown > 0) {
+      const interval = setInterval(() => {
+        setCountdown((prevCountdown) => {
+          if (prevCountdown <= 1) {
+            clearInterval(interval);
+            window.location.href = `/game/${gameRequestsAnswer.gameId}`; // Weiterleitung zum Spiel
+            return 0;
+          }
+          return prevCountdown - 1;
+        });
+      }, 1000);
+    }
+  }, [countdown, gameRequestsAnswer]);
+
   const startGame = async () => {
     try {
-      const gameStartDTO = {
-        difficulty,
-        continent,
-      };
-
-      const response = await axios.post("http://localhost:8080/rest/game/start", gameStartDTO, {
+      const gameStartDTO = { difficulty, continent };
+      await axios.post("http://localhost:8080/rest/game/start", gameStartDTO, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
           "Content-Type": "application/json",
         },
       });
-
       alert("Spiel erfolgreich gestartet!");
-      fetchWaitingGames();
     } catch (error) {
       console.error("Fehler beim Starten des Spiels:", error);
       alert("Spiel konnte nicht gestartet werden.");
     }
   };
 
-  // Spiel stoppen
-const stopGame = async (gameId) => {
-  try {
-    const updateGameStatusDTO = {
-      gameId: gameId,
-      newStatus: "Stopped",
-    };
-
-    // Den ausgehenden DTO als JSON in der Konsole anzeigen
-    console.log("Ausgehender DTO:", JSON.stringify(updateGameStatusDTO, null, 2));
-
-    // API-Aufruf zum Stoppen des Spiels
-    const response = await axios.post(
-      "http://localhost:8080/rest/game/updateStatus",
-      updateGameStatusDTO,
-      {
+  const stopGame = async (gameId) => {
+    try {
+      await axios.post("http://localhost:8080/rest/game/updateStatus", { gameId, newStatus: "Stopped" }, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
           "Content-Type": "application/json",
         },
-      }
-    );
+      });
+      alert(`Spiel mit ID ${gameId} wurde gestoppt.`);
+    } catch (error) {
+      console.error("Fehler beim Stoppen des Spiels:", error);
+      alert("Fehler beim Stoppen des Spiels.");
+    }
+  };
 
-    alert(`Spiel mit ID ${gameId} wurde gestoppt.`);
-    console.log("Antwort vom Server:", response.data);
+  const joinRequest = async (gameId, player1Id) => {
+    try {
+      await axios.post(
+        `http://localhost:8080/rest/game/joinrequest`,
+        { gameId, player1Id },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      alert("Spielanfrage erfolgreich gesendet! Bitte auf Antwort warten!");
+    } catch (error) {
+      console.error("Fehler beim Senden der Spielanfrage:", error);
+      alert("Spielanfrage konnte nicht gesendet werden.");
+    }
+  };
 
-    // Wartende Spieleliste aktualisieren
-    fetchWaitingGames();
-  } catch (error) {
-    console.error("Fehler beim Stoppen des Spiels:", error);
-    alert("Fehler beim Stoppen des Spiels.");
-  }
-};
-
-// Spiel beitreten
-const joinGame = async (gameId) => {
-  try {
-    // JSON mit der gameId erstellen
-    const payload = {
-      gameId: gameId,
-    };
-
-    // POST-Anfrage an den Server senden
-    await axios.post("http://localhost:8080/rest/game/join", payload, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-        "Content-Type": "application/json",  // Setzen des Content-Types auf JSON
-      },
-    });
-
-    alert(`Erfolgreich dem Spiel mit ID ${gameId} beigetreten!`);
-    fetchWaitingGames(); // Wartende Spiele aktualisieren
-
-    // Nach dem erfolgreichen Beitritt zur Game-Seite weiterleiten
-    navigate(`/game/${gameId}`);
-  } catch (error) {
-    console.error("Fehler beim Beitreten des Spiels:", error);
-    alert("Fehler beim Beitreten des Spiels.");
-  }
-};
-
-  // Überprüfung, ob der Benutzer bereits in einem wartenden Spiel ist
-  const isUserInWaitingGames = waitingGames.some(
-    (game) => game.spieler1Name === userDetails?.username
-  );
+  const requestAnswer = async (gameId, player2Name, decision) => {
+    try {
+      await axios.post(
+        `http://localhost:8080/rest/game/requestAnswer`,
+        { gameId, player2Name, decision },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Fehler beim Senden der Antwort auf Spielanfrage:", error);
+      alert("Antwort auf Spielanfrage konnte nicht gesendet werden.");
+    }
+  };
 
   if (loading) {
     return <p>Lade...</p>;
@@ -156,7 +197,7 @@ const joinGame = async (gameId) => {
       {userDetails ? (
         <div>
           <p>Angemeldeter Benutzer: {userDetails.username}</p>
-          <p>Gesamtzahl der gespielten Spiele: {userDetails.gamesPlayed}</p>
+          <p>mit der ID: {userDetails.userID}</p>
 
           <h2>Spiel starten</h2>
           <div>
@@ -178,14 +219,7 @@ const joinGame = async (gameId) => {
               <option value="Australia">Australien</option>
             </select>
           </div>
-          <button onClick={startGame} disabled={isUserInWaitingGames}>
-            Spiel starten
-          </button>
-          {isUserInWaitingGames && (
-            <p style={{ color: "red" }}>
-              Du kannst kein neues Spiel starten, da du bereits in einem wartenden Spiel bist.
-            </p>
-          )}
+          <button onClick={startGame}>Spiel starten</button>
 
           <h2>Wartende Spiele</h2>
           {waitingGames.length > 0 ? (
@@ -195,6 +229,7 @@ const joinGame = async (gameId) => {
                   <th>Spieler 1</th>
                   <th>Kontinent</th>
                   <th>Schwierigkeitsgrad</th>
+                  <th>Spieler1ID</th>
                   <th>Aktion</th>
                 </tr>
               </thead>
@@ -204,23 +239,34 @@ const joinGame = async (gameId) => {
                     <td>{game.spieler1Name}</td>
                     <td>{game.continent}</td>
                     <td>{game.difficultyLevel}</td>
+                    <td>{game.spieler1ID}</td>
                     <td>
-                      {game.spieler1Name === userDetails.username ? (
-                        <button onClick={() => stopGame(game.id)}>Spiel stoppen</button>
-                      ) : (
-                        <button onClick={() => joinGame(game.id)}>Spiel beitreten</button>
-                      )}
+                      <button onClick={() => joinRequest(game.id, game.spieler1ID)}>Spiel beitreten</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <p>Derzeit keine wartenden Spiele verfügbar.</p>
+            <p>Keine wartenden Spiele verfügbar.</p>
           )}
         </div>
       ) : (
         <p>Benutzerinformationen konnten nicht geladen werden.</p>
+      )}
+      {gameRequest ? (
+        <div>
+          <p>{gameRequest.requestingPlayer} möchte mit dir spielen!</p>
+          <button onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestAccepted")}>Anfrage annehmen</button>
+          <button onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestDeclined")}>Anfrage ablehnen</button>
+        </div>
+      ) : null}
+
+      {message && (
+        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0" }}>
+          <p>{message}</p>
+          {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+        </div>
       )}
     </div>
   );

@@ -7,6 +7,8 @@ import Register from './components/Register';
 import Game from "./components/Game";
 import Test from "./components/test";
 import Lobby from './components/Lobby'; // Stellen Sie sicher, dass Sie die Lobby-Komponente importieren
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // ProtectedRoute-Komponente: Umleitung, falls der Benutzer nicht authentifiziert ist
 const ProtectedRoute = ({ element, redirectTo }) => {

@@ -6,6 +6,7 @@ import java.util.List;
 
 @Data
 public class PlayerDetailsDTO {
+	private Long userID;
     private String username;
     private int gamesPlayed; // Gesamtzahl der Spiele
     private List<HighscoreDTO> highscores; // Liste der Highscores des Benutzers
@@ -27,5 +28,11 @@ public class PlayerDetailsDTO {
 	}
 	public void setHighscores(List<HighscoreDTO> highscores) {
 		this.highscores = highscores;
+	}
+	public Long getUserID() {
+		return userID;
+	}
+	public void setUserID(Long userID) {
+		this.userID = userID;
 	}
 }

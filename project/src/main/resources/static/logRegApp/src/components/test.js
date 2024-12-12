@@ -1,77 +1,73 @@
 import React, { useState, useEffect } from "react";
-import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
 
 const WebSocketTest = () => {
-    const [message, setMessage] = useState("");
-    const [response, setResponse] = useState("");
-    const [connected, setConnected] = useState(false);
-    const [client, setClient] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
+  let stompClient = null;
 
-    // Initialisiere STOMP-Client und stelle Verbindung her
-    useEffect(() => {
-        const stompClient = new Client({
-            brokerURL: "ws://localhost:8080/websocket", // WebSocket-Endpoint des Servers
-            connectHeaders: {
-                // Optionale Header, wenn benötigt
-            },
-            debug: (str) => {
-                console.log(str);
-            },
-            onConnect: () => {
-                setConnected(true);
-                console.log("Verbindung zu WebSocket hergestellt");
-                
-                // Abonniere den Topic "/topic/greetings" auf Nachrichten
-                stompClient.subscribe("/topic/greetings", (message) => {
-                    setResponse(message.body);
-                });
-            },
-            onDisconnect: () => {
-                setConnected(false);
-                console.log("Verbindung zu WebSocket getrennt");
-            },
-            onStompError: (frame) => {
-                console.error(frame);
-            },
+  const addMessage = (message) => {
+    setMessages((prev) => [...prev, message]);
+  };
+
+  const connect = () => {
+    const socket = new SockJS("http://localhost:8080/websocket"); // Der WebSocket-Endpunkt
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+      setIsConnected(true);
+      addMessage("Connected to WebSocket!");
+
+      // Abonniere das Topic '/topic/waitingGames', um die Wartespiele zu erhalten
+      stompClient.subscribe("/topic/waitingGames", (message) => {
+        const waitingGames = JSON.parse(message.body); // Die Nachricht als JSON parsen
+        waitingGames.forEach((game) => {
+          addMessage(`Spiel ID: ${game.id}`);
+          addMessage(`Spieler 1: ${game.spieler1Name}`);
+          addMessage(`Kontinent: ${game.continent}`);
+          addMessage(`Schwierigkeitsgrad: ${game.difficultyLevel}`);
         });
+      });
+    });
 
-        stompClient.activate();
-        setClient(stompClient);
-
-        // Cleanup: Trenne die WebSocket-Verbindung bei Verlassen der Seite
-        return () => {
-            if (stompClient.connected) {
-                stompClient.deactivate();
-            }
-        };
-    }, []);
-
-    // Funktion zum Senden einer Nachricht an den Server
-    const sendMessage = () => {
-        if (client && connected) {
-            const helloMessage = { name: "User" }; // Beispielnachricht mit einem Namen
-            client.publish({
-                destination: "/app/hello", // Endpunkt, der in WebSocketConfig definiert wurde
-                body: JSON.stringify(helloMessage),
-            });
-        }
+    stompClient.onStompError = (frame) => {
+      addMessage(`Broker error: ${frame.headers["message"]}`);
     };
 
-    return (
-        <div>
-            <h1>WebSocket Kommunikation mit STOMP</h1>
-            <button onClick={sendMessage} disabled={!connected}>
-                Nachricht an Server senden
-            </button>
-            <div>
-                <h3>Antwort vom Server:</h3>
-                <p>{response}</p>
-            </div>
-            <div>
-                <p>Status: {connected ? "Verbunden" : "Nicht verbunden"}</p>
-            </div>
-        </div>
-    );
+    stompClient.onWebSocketError = (event) => {
+      addMessage("WebSocket error: " + event.message || "Unknown error");
+    };
+  };
+
+  const disconnect = () => {
+    if (stompClient) {
+      stompClient.disconnect(() => {
+        setIsConnected(false);
+        addMessage("Disconnected from WebSocket.");
+      });
+    }
+  };
+
+  return (
+    <div>
+      <h1>WebSocket Test</h1>
+      <button onClick={connect} disabled={isConnected}>
+        Connect
+      </button>
+      <button onClick={disconnect} disabled={!isConnected}>
+        Disconnect
+      </button>
+      <div>
+        <h2>Messages</h2>
+        <ul>
+          {messages.map((msg, index) => (
+            <li key={index}>{msg}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 };
 
 export default WebSocketTest;

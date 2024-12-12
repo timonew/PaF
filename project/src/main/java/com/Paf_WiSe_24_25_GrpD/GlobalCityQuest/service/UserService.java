@@ -101,6 +101,12 @@ public class UserService implements UserDetailsService {
         return spielerOpt.orElse(null); // Gibt null zurück, wenn Benutzer nicht gefunden
     }
 
+    public Long getIdByUsername(String userName) {
+        Optional<Spieler> spielerOpt = spielerRepository.findByUserName(userName);
+        Spieler spieler = spielerOpt.get();
+        return spieler.getId();
+    }
+    
     public PlayerDetailsDTO getPlayerDetailsByUsername(String username) {
         Optional<Spieler> spielerOptional = spielerRepository.findByUserName(username);
 
@@ -122,6 +128,7 @@ public class UserService implements UserDetailsService {
 
         PlayerDetailsDTO playerDetailsDTO = new PlayerDetailsDTO();
         playerDetailsDTO.setUsername(spieler.getUserName());
+        playerDetailsDTO.setUserID(spieler.getId());
         playerDetailsDTO.setHighscores(highscoreDTOs); // Highscores des Spielers setzen
 
         return playerDetailsDTO;

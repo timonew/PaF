@@ -33,6 +33,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (requestPath.startsWith("/websocket")) {
                
                 chain.doFilter(request, response);
+                return;
+               
         }
 
         // Prüfung auf vorhandenen JWT-Header

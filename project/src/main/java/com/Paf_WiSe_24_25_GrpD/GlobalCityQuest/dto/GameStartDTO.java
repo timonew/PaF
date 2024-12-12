@@ -1,10 +1,30 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto;
 
 public class GameStartDTO {
-    private int difficulty;
-    private String continent;
+    private Long gameId;        // ID des Spiels
+    private String username;    // Benutzername des Spielers, der das Spiel startet
+    private int difficulty;     // Schwierigkeit des Spiels
+    private String continent;   // Kontinent des Spiels
 
-    // Getter und Setter
+    // Getter und Setter für gameId
+    public Long getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(Long gameId) {
+        this.gameId = gameId;
+    }
+
+    // Getter und Setter für username
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    // Getter und Setter für difficulty
     public int getDifficulty() {
         return difficulty;
     }
@@ -13,6 +33,7 @@ public class GameStartDTO {
         this.difficulty = difficulty;
     }
 
+    // Getter und Setter für continent
     public String getContinent() {
         return continent;
     }
@@ -25,8 +46,11 @@ public class GameStartDTO {
     @Override
     public String toString() {
         return "GameStartDTO{" +
-               "difficulty=" + difficulty + 
+               "gameId=" + gameId +
+               ", username='" + username + '\'' +
+               ", difficulty=" + difficulty + 
                ", continent='" + continent + '\'' +
                '}';
     }
 }
+

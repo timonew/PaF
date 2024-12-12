@@ -12,21 +12,12 @@ const Game = () => {
   useEffect(() => {
     const fetchGameDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/rest/game/${gameId}`, {
+        const response = await axios.get(`http://localhost:8080/rest/game/init?gameId=${gameId}`, {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
           },
         });
-
-        // Wenn die Bilddaten vorhanden sind, in eine Base64-URL umwandeln
-        if (response.data.mapImage) {
-          const base64Image = btoa(
-            new Uint8Array(response.data.mapImage).reduce((data, byte) => data + String.fromCharCode(byte), "")
-          );
-          setGameDetails({ ...response.data, mapImage: `data:image/png;base64,${base64Image}` });
-        } else {
-          setGameDetails(response.data);
-        }
+        setGameDetails(response.data);
       } catch (error) {
         console.error("Fehler beim Abrufen der Spiel-Details:", error);
         alert("Fehler beim Abrufen der Spiel-Details.");
@@ -39,27 +30,39 @@ const Game = () => {
   }, [gameId, jwtToken]);
 
   if (loading) {
-    return <p>Lade...</p>;
+    return <div>Lade Spielinformationen...</div>;
   }
 
   if (!gameDetails) {
-    return <p>Spiel nicht gefunden!</p>;
+    return <div>Keine Daten verfügbar.</div>;
   }
 
   return (
     <div>
-      <h1>Spiel: {gameDetails.spielId}</h1>
-      <p>Spieler 1: {gameDetails.spieler1Name}</p>
-      <p>Spieler 2: {gameDetails.spieler2Name}</p>
-      <p>Status: {gameDetails.status}</p>
-      
-      {/* Wenn eine Karte vorhanden ist, diese anzeigen */}
-      {gameDetails.mapImage && (
-        <div>
-          <h2>Karte</h2>
-          <img src={gameDetails.mapImage} alt="Spielkarte" style={{ maxWidth: "100%" }} />
-        </div>
-      )}
+      <h1>Spiel Details</h1>
+      <p><strong>Spiel-ID:</strong> {gameDetails.gameId}</p>
+      <p><strong>Status:</strong> {gameDetails.status}</p>
+      <h2>Spielzüge</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Spielzug-ID</th>
+            <th>Stadt-ID</th>
+            <th>Stadt-Name</th>
+            <th>Koordinaten</th>
+          </tr>
+        </thead>
+        <tbody>
+          {gameDetails.spielzuege.map((spielzug, index) => (
+            <tr key={index}>
+               <td>{spielzug.SpielZugId}</td>
+              <td>{spielzug.stadtId}</td>
+              <td>{spielzug.stadtName}</td>
+              <td>{spielzug.koordinaten}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

@@ -3,6 +3,7 @@ package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto;
 public class SimpleGameDTO {
     private Long id;
     private String spieler1Name;
+    private Long spieler1ID;
     private String continent;
     private int difficultyLevel;
 
@@ -38,4 +39,24 @@ public class SimpleGameDTO {
     public void setDifficultyLevel(int difficultyLevel) {
         this.difficultyLevel = difficultyLevel;
     }
+
+	public Long getSpieler1ID() {
+		return spieler1ID;
+	}
+
+	public void setSpieler1ID(Long long1) {
+				this.spieler1ID = long1;
+	}
+	
+	@Override
+	public String toString() {
+	    return "SimpleGameDTO{" +
+	           "id=" + id +
+	           ", spieler1Name='" + spieler1Name + '\'' +
+	           ", spieler1ID=" + spieler1ID +
+	           ", continent='" + continent + '\'' +
+	           ", difficultyLevel=" + difficultyLevel +
+	           '}';
+	}
+
 }
