@@ -128,7 +128,6 @@ const Lobby = () => {
           "Content-Type": "application/json",
         },
       });
-      alert("Spiel erfolgreich gestartet!");
     } catch (error) {
       console.error("Fehler beim Starten des Spiels:", error);
       alert("Spiel konnte nicht gestartet werden.");
@@ -143,7 +142,7 @@ const Lobby = () => {
           "Content-Type": "application/json",
         },
       });
-      alert(`Spiel mit ID ${gameId} wurde gestoppt.`);
+
     } catch (error) {
       console.error("Fehler beim Stoppen des Spiels:", error);
       alert("Fehler beim Stoppen des Spiels.");
@@ -162,7 +161,7 @@ const Lobby = () => {
           },
         }
       );
-      alert("Spielanfrage erfolgreich gesendet! Bitte auf Antwort warten!");
+
     } catch (error) {
       console.error("Fehler beim Senden der Spielanfrage:", error);
       alert("Spielanfrage konnte nicht gesendet werden.");
@@ -241,7 +240,11 @@ const Lobby = () => {
                     <td>{game.difficultyLevel}</td>
                     <td>{game.spieler1ID}</td>
                     <td>
-                      <button onClick={() => joinRequest(game.id, game.spieler1ID)}>Spiel beitreten</button>
+                       {game.spieler1Name === userDetails.username ? (
+                        <button onClick={() => stopGame(game.id)}>Spiel stoppen</button>
+                      ) : (
+                        <button onClick={() => joinRequest(game.id, game.spieler1ID)}>Spiel beitreten</button>
+                      )}
                     </td>
                   </tr>
                 ))}

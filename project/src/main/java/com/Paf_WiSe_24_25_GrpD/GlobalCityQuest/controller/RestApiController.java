@@ -18,6 +18,7 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.PlayerDetailsDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.RegisterRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SimpleGameDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SpielDetailsDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SubmitGuessDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.UpdateGameStatusDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtUtil;
@@ -214,6 +215,73 @@ public class RestApiController {
             return ResponseEntity.ok(gameInitDTO);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
+        }
+    }
+    
+    // Update des Spielstatus
+    @PostMapping("/game/updateStatus")
+    public ResponseEntity<String> updateGameStatus(@RequestBody UpdateGameStatusDTO updateGameStatusDTO, Authentication authentication) {
+    	 if (authentication == null || !authentication.isAuthenticated()) {
+             return ResponseEntity.status(401).body("Unauthorized");
+         }
+    	
+    	
+        if (updateGameStatusDTO == null || updateGameStatusDTO.getGameId() == null || updateGameStatusDTO.getNewStatus() == null) {
+            throw new IllegalArgumentException("UpdateGameStatusDTO, GameId oder NewStatus darf nicht null sein.");
+        }
+
+        gameService.setGameStatus(updateGameStatusDTO);
+        
+        
+        return ResponseEntity.ok("Spielstatus wurde erfolgreich aktualisiert ");
+    }
+    
+    @PostMapping("/game/submitGuess")
+    public ResponseEntity<String> submitGuess(@RequestBody Map<String, String> requestBody, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        String spielIdStr = requestBody.get("spielId");
+        String spielZugIdStr = requestBody.get("spielZugId");
+        String spielZugScoreStr = requestBody.get("spielZugScore");
+        String spieler1BoolStr = requestBody.get("spieler1Bool");
+        String spielerName = authentication.getName();
+        
+        Long spielId;
+        Long spielZugId;
+        Long spielZugScore;
+        boolean spieler1Bool;
+
+        // Überprüfen, ob IDs konvertiert werden können
+        try {
+        	spielId = Long.parseLong(spielIdStr);
+            spielZugId = Long.parseLong(spielZugIdStr);
+            spielZugScore = Long.parseLong(spielZugScoreStr);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400).body("Invalid ID format");
+        }
+        
+        try {
+            spieler1Bool = Boolean.parseBoolean(spieler1BoolStr);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body("Invalid Bool format");
+        }
+
+        // Spieler-ID aus Benutzername abrufen
+        Long spielerId = userService.getIdByUsername(spielerName);
+        if (spielerId == null) {
+            return ResponseEntity.status(404).body("Spieler nicht gefunden: " + spielerName);
+        }
+
+        try {
+            // Guess-Daten verarbeiten
+            gameService.processGuess(spielId,spielZugId, spielZugScore, spielerId,spieler1Bool);
+            return ResponseEntity.ok("Guess erfolgreich übermittelt.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Ein Fehler ist aufgetreten: " + e.getMessage());
         }
     }
 

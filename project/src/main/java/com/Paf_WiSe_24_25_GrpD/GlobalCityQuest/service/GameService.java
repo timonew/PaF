@@ -82,7 +82,7 @@ public class GameService {
      * @param updateGameStatusDTO Daten zur Aktualisierung des Spielstatus.
      * @return Neuer Status des Spiels.
      */
-    public String setGameStatus(UpdateGameStatusDTO updateGameStatusDTO) {
+    public void setGameStatus(UpdateGameStatusDTO updateGameStatusDTO) {
         if (updateGameStatusDTO == null || updateGameStatusDTO.getGameId() == null || updateGameStatusDTO.getNewStatus() == null) {
             throw new IllegalArgumentException("UpdateGameStatusDTO, GameId oder NewStatus darf nicht null sein.");
         }
@@ -98,8 +98,6 @@ public class GameService {
 
         // Aktualisierte Liste der wartenden Spiele broadcasten
         getWaitingGames();
-
-        return spiel.getStatus();
     }
 
     public SimpleGameDTO startGame(GameStartDTO gameStartDTO, String username) {
@@ -269,11 +267,20 @@ public class GameService {
         // Hole die Spielzüge für das Spiel
         List<Spielzug> spielzüge = spielzugRepository.findBySpielId(gameId);
         System.out.println("Spielzüge gefunden: " + spielzüge.size());
+        
+        Spieler spieler1 = spiel.getSpieler1();
+        Spieler spieler2 = spiel.getSpieler2();
+        
+        
 
         // 4. DTO erstellen
         GameInitDTO dto = new GameInitDTO();
+        dto.setSpieler1Id(spieler1.getId());
+        dto.setSpieler2Id(spieler2.getId());
         dto.setGameId(spiel.getId());
         dto.setStatus(spiel.getStatus());
+        dto.setContinent(spiel.getContinent());
+        dto.setDifficultyLevel(spiel.getDifficultyLevel());
 
         // Falls keine Spielzüge vorhanden sind, könnte dies ein Hinweis auf ein Problem sein
         if (spielzüge.isEmpty()) {
@@ -283,6 +290,7 @@ public class GameService {
         dto.setSpielzuege(spielzüge.stream().map(spielzug -> {
             SpielzugDTO spielzugDTO = new SpielzugDTO();
             spielzugDTO.setSpielZugId(spielzug.getId());
+            System.out.println("setSpielZugId"+spielzug.getId());
             // Stadt aus dem Spielzug abrufen
             Stadt stadt = spielzug.getStadt();
             if (stadt != null) {
@@ -301,5 +309,39 @@ public class GameService {
 
         return dto;
     }
+    
+    @Transactional
+    public void processGuess(Long gameId,Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool) {
+        // Spiel validieren
+        Optional<Spielzug> moveOpt = spielzugRepository.findById(spielZugId);
+        if (moveOpt.isEmpty()) {
+            throw new IllegalArgumentException("Spielzug nicht gefunden mit ID: " + spielZugId);
+        }
 
+        Spielzug move = moveOpt.get();
+              
+        if (spieler1Bool) {
+        	move.setScoreSpieler1(spielZugScore);        	
+        } else {
+        	move.setScoreSpieler2(spielZugScore);
+        }
+        
+
+        // Änderungen im Repository speichern
+        spielzugRepository.save(move);
+
+        // DTO für den WebSocket-Broadcast erstellen
+        GuessBroadcastDTO broadcastDTO = new GuessBroadcastDTO();
+        broadcastDTO.setSpielZugId(move.getId());
+        if (spieler1Bool) {
+        	broadcastDTO.setScoreSpieler1(move.getScoreSpieler1());
+        } else {
+        	broadcastDTO.setScoreSpieler2(move.getScoreSpieler2());
+        }
+        
+        // Broadcast durchführen
+        webSocketController.broadcastGuess(gameId, broadcastDTO);
+
+        System.out.println("Guess erfolgreich verarbeitet: SpielZugId=" + spielZugId );
+    }
 }
