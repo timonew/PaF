@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            top: 100px;
+            width: 1200px;
+            height: 1100px; /* Karte nimmt die volle Höhe des Bildschirms ein */
+            margin-right: auto;
+            margin-left: auto;
+            border-radius: 1200px;
+        }
+
+        #header {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+    </style>
+</head>
+<body>
+<h1 style="position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);">
+
+    Das spiel beginnt!
+</h1>
+
+<div id="popup" style="display: none; position: absolute; top: 20px; left: 20px; background: white; padding: 10px; border: 1px solid black; z-index: 1000;">
+    <span id="popup-content"></span>
+    <button onclick="closePopup()">Schließen</button>
+</div>
+
+<!-- Textfeld für die gesuchte Stadt -->
+<div id="city-display" style="padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; font-size: 16px;">
+    Aktuell gesuchte Stadt: <span id="current-city" style="font-weight: bold;">Keine</span>
+</div>
+
+
+
+<!-- Timer-Anzeige -->
+<div id="timer-display">
+    Zeit verbleibend: <span id="timer">30</span> Sekunden
+</div>
+
+<!-- Karte -->
+<div id="map" style="height: 500px;"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>
+
+<!-- Externe JavaScript-Datei -->
+<script src="leafletfunctions.js"></script>
+
+
+</body>
+
+
+</body>
+</html>
