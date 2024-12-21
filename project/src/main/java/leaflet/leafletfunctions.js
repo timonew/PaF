@@ -9,9 +9,6 @@ const cities = [
     { name: "New York", lat: 40.7128, lng: -74.0060 }
 ];
 
-const city = cities[Math.floor(Math.random() * cities.length)];
-
-
 
 let timer, selectedCity, playerMarker;
 
@@ -50,7 +47,7 @@ function toRadians(degrees) {
 // Timer starten
 function startTimerWithCountdown() {
     clearTimeout(timer);
-    let timeLeft = 30;
+    let timeLeft = 10;
     const timerElement = document.getElementById('timer');
     const countdown = setInterval(() => {
         if (timeLeft <= 0) {
@@ -66,7 +63,7 @@ function startTimerWithCountdown() {
 
 // Entfernung berechnen
 function calculateDistance() {
-    if (!playerMarker) {
+    if (!playerMarker) { //prüft, ob ein Marker gesetzt wurde
         alert("Kein Marker gesetzt!");
         return;
     }
@@ -75,7 +72,28 @@ function calculateDistance() {
     const cityLat = selectedCity.lat;
     const cityLng = selectedCity.lng;
     const distance = calculateHaversineDistance(playerLat, playerLng, cityLat, cityLng);
-    alert(`Die Entfernung zur Stadt "${selectedCity.name}" beträgt: ${distance.toFixed(2)} km`);
+
+    L.marker([cityLat, cityLng]).addTo(map)
+        .bindPopup(`${selectedCity.name}`)
+        .openPopup();
+
+    const distanceLine = L.polyline(
+        [
+            [playerLat, playerLng], // Startpunkt: Spieler-Tipp
+            [cityLat, cityLng]      // Endpunkt: Gesuchte Stadt
+        ],
+        {
+            color: 'blue',
+            weight: 3,
+            dashArray: '5, 10' // Definiert das gestrichelte Muster
+        }
+    ).addTo(map);
+
+    const resultElement = document.getElementById('result');
+    if (resultElement) {
+        resultElement.innerHTML = `Entfernung zur gesuchten Stadt "${selectedCity.name}": ${distance.toFixed(2)} km`;
+    }
+
 }
 
 // Neue Runde starten
@@ -88,11 +106,13 @@ function startNewRound() {
         playerMarker = null;
     }
 }
-var currentMarker= null;
 
-alert(`Rate die Position von: ${city.name}`);
 
-updateCityDisplay(city.name);
+
+// Starte das Spiel
+selectedCity = cities[Math.floor(Math.random() * cities.length)];
+alert(`Rate die Position von: ${selectedCity.name}`);
+updateCityDisplay(selectedCity.name);
 startTimerWithCountdown();
 
 // Klickevent: Setze einen Marker und gebe somit deinen Tip ab
@@ -100,11 +120,11 @@ map.on('click', function(e) {
     var lat = e.latlng.lat;
     var lng = e.latlng.lng;
 
-    if (currentMarker){
-        map.removeLayer(currentMarker);
+    if (playerMarker){
+        map.removeLayer(playerMarker);
     }
 
-    currentMarker = L.marker([lat, lng]).addTo(map)
+    playerMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup("dein Tip")
         .openPopup();
 
