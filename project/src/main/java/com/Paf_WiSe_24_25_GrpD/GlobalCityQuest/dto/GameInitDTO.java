@@ -7,6 +7,8 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
 
 public class GameInitDTO {
 	private Long spieler1Id;
+	private String spieler1Name;
+	private String spieler2Name;
 	private Long spieler2Id;
     private Long gameId;
     private int difficultyLevel;
@@ -69,6 +71,22 @@ public class GameInitDTO {
 
 	public void setSpieler2Id(Long spieler2Id) {
 		this.spieler2Id = spieler2Id;
+	}
+
+	public String getSpieler1Name() {
+		return spieler1Name;
+	}
+
+	public void setSpieler1Name(String spieler1Name) {
+		this.spieler1Name = spieler1Name;
+	}
+
+	public String getSpieler2Name() {
+		return spieler2Name;
+	}
+
+	public void setSpieler2Name(String spieler2Name) {
+		this.spieler2Name = spieler2Name;
 	}
 
 

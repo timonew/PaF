@@ -3,6 +3,8 @@ public class GuessBroadcastDTO {
     private Long spielZugId;
     private Long scoreSpieler1;
     private Long scoreSpieler2;
+    private String guessSpieler1;
+    private String guessSpieler2;
 
     // Getter und Setter
     public Long getSpielZugId() {
@@ -27,5 +29,21 @@ public class GuessBroadcastDTO {
 
 	public void setScoreSpieler2(Long scoreSpieler2) {
 		this.scoreSpieler2 = scoreSpieler2;
+	}
+
+	public String getGuessSpieler1() {
+		return guessSpieler1;
+	}
+
+	public void setGuessSpieler1(String guessSpieler1) {
+		this.guessSpieler1 = guessSpieler1;
+	}
+
+	public String getGuessSpieler2() {
+		return guessSpieler2;
+	}
+
+	public void setGuessSpieler2(String guessSpieler2) {
+		this.guessSpieler2 = guessSpieler2;
 	}
 }

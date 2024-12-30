@@ -17,8 +17,6 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.LoginRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.PlayerDetailsDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.RegisterRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SimpleGameDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SpielDetailsDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SubmitGuessDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.UpdateGameStatusDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtUtil;
@@ -244,9 +242,12 @@ public class RestApiController {
 
         String spielIdStr = requestBody.get("spielId");
         String spielZugIdStr = requestBody.get("spielZugId");
+        String spielZugGuessStr = requestBody.get("spielZugGuess");
         String spielZugScoreStr = requestBody.get("spielZugScore");
         String spieler1BoolStr = requestBody.get("spieler1Bool");
         String spielerName = authentication.getName();
+        
+        System.out.println(spielZugScoreStr);
         
         Long spielId;
         Long spielZugId;
@@ -276,7 +277,7 @@ public class RestApiController {
 
         try {
             // Guess-Daten verarbeiten
-            gameService.processGuess(spielId,spielZugId, spielZugScore, spielerId,spieler1Bool);
+            gameService.processGuess(spielId,spielZugId, spielZugScore,spielerId,spieler1Bool,spielZugGuessStr);
             return ResponseEntity.ok("Guess erfolgreich übermittelt.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.status(400).body(e.getMessage());

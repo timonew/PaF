@@ -6,9 +6,9 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Game from "./components/Game";
 import Test from "./components/test";
-import Lobby from './components/Lobby'; // Stellen Sie sicher, dass Sie die Lobby-Komponente importieren
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Lobby from './components/Lobby';
+import GameLFL from './components/Game_leaflet';
+
 
 // ProtectedRoute-Komponente: Umleitung, falls der Benutzer nicht authentifiziert ist
 const ProtectedRoute = ({ element, redirectTo }) => {
@@ -27,6 +27,8 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                  
                 <Route path="/test" element={<Test />} />
+				
+				<Route path="/gameLfl" element={<GameLFL />} />
 
                 {/* Registrierungs-Route */}
                 <Route path="/register" element={<Register />} />

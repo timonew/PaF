@@ -1,50 +1,201 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
+import L from "leaflet"; // Leaflet importieren
+
+// Hilfsfunktionen
+// Haversine-Formel für Entfernung
+function calculateHaversineDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Erdradius in km
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Entfernung in Kilometern
+}
+
+// Funktion, um Grad in Bogenmaß umzuwandeln
+function toRadians(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+// CSS-Loader
+const loadExternalCSS = (url) => {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = url;
+  document.head.appendChild(link);
+};
 
 const Game = () => {
-  const { gameId } = useParams();
-  const jwtToken = localStorage.getItem("jwtToken");
-  const [gameDetails, setGameDetails] = useState(null);
-  const [userDetails, setUserDetails] = useState(null);
-  const [currentSpielzugIndex, setCurrentSpielzugIndex] = useState(0);
-  const [timer, setTimer] = useState(5); // Beginne mit 5 Sekunden Vorbereitung
-  const [isPreparing, setIsPreparing] = useState(true);
-  const [spieler1Bool, setSpieler1Bool] = useState(true);
-  const [score, setScore] = useState("");
-  const [spielzuege, setSpielzuege] = useState([]); // Spielzüge mit Städten
-  let stompClient = null;
+  // =========================================
+  // ** State- und Ref-Initialisierungen **
+  // =========================================
+
+  const { gameId } = useParams(); // Parameter aus der URL
+  const jwtToken = localStorage.getItem("jwtToken"); // Authentifizierungs-Token
+  const [gameDetails, setGameDetails] = useState(null); // Spielinformationen
+  const [userDetails, setUserDetails] = useState(null); // Benutzerdetails
+  const [currentSpielzugIndex, setCurrentSpielzugIndex] = useState(0); // Aktueller Spielzug
+  const [timer, setTimer] = useState(5); // Timer für Züge (Vorbereitung/Spielzeit)
+  const [isPreparing, setIsPreparing] = useState(0); // Status des Vorbereitungsmodus
+  const [spieler1Bool, setSpieler1Bool] = useState(true); // Spielerzuordnung
+  const [score, setScore] = useState(0); // Punktzahl für den aktuellen Zug
+  const [distance, setDistance] = useState(20000); // Distanz für den aktuellen Zug
+  const [spielzuege, setSpielzuege] = useState([]); // Liste der Spielzüge
+  const [connected, setConnected] = useState(false); // Verbindungstatus für WebSocket
+  const [map, setMap] = useState(null); // Leaflet Map-Instanz
+  const markerRef = useRef(null); // Referenz für den Marker
+  const currentMarker= useRef(null); // Aktueller gesetzter Marker
+  const selectedCoordinates = useRef(null); // Benutzer-Auswahlkoordinaten
+  const mapRef = useRef(null); // Referenz für das Map-Container-Div
+  const [totalScorePl1, setTotalScorePl1]=useState(0);
+  const [totalScorePl2, setTotalScorePl2]=useState(0);
+  const [isPlayer1,setIsPlayer1] = useState(false);
+  const navigate = useNavigate();
+  let stompClient = null; // WebSocket-Client
+
+
+  // =========================================
+  // ** useEffect Hooks **
+  // =========================================
 
   // Effekt: Initialisiere Daten und WebSocket-Verbindung
   useEffect(() => {
-    fetchInitialData();
-    setupWebSocket();
+    loadExternalCSS("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"); // CSS für Leaflet laden
+    fetchInitialData(); // Daten abrufen (Spiel & Benutzer)
+    setupWebSocket(); // WebSocket-Verbindung einrichten
     return () => {
-      disconnectWebSocket();
+      disconnectWebSocket(); // Verbindung bei Cleanup trennen
     };
-  }, []);
+  }, []); // Läuft nur einmal bei Komponent-Mount
 
-  // Effekt: Timer für Vorbereitung und Spielzüge
+  // Effekt: Timer-Verwaltung für Vorbereitung und Spielzug
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
-      return () => clearInterval(interval);
+      return () => clearInterval(interval); // Cleanup: Interval beenden
     } else if (timer === 0) {
-      if (isPreparing) {
-        setIsPreparing(false);
-        setTimer(30); // 30 Sekunden für Spielzug
-      } else {
-        submitGuess();
-        setIsPreparing(true);
-        setTimer(5); // 5 Sekunden Vorbereitung
-        setCurrentSpielzugIndex((prevIndex) => prevIndex + 1);
+          if(isPreparing === 0) setIsPreparing(2);
+          if (isPreparing === 2) {
+            // Wechsel von Vorbereitung in den Spielmodus
+            updateScore();
+            setIsPreparing(1);
+            setTimer(20); //Sekunden für Spielzug
+          }
+          if (isPreparing === 1) {
+            // Wechsel von Spielzug zurück in den Vorbereitungmodus
+            submitGuess(); // Benutzerantwort senden
+            setIsPreparing(2);
+            setTimer(8); //Sekunden für Vorbereitung
+            setCurrentSpielzugIndex((prevIndex) => prevIndex + 1);
+            if (currentSpielzugIndex === 10){
+                alert("Spiel beendet");
+                navigate("/lobby");
+                }
+          }
+    }
+  }, [timer, isPreparing]); // Läuft, wenn sich `timer` oder `isPreparing` ändert
+
+  // Effekt: Initialisiere Leaflet-Karte
+  useEffect(() => {
+    if (!map) initMap(); // Karte initialisieren, falls noch nicht vorhanden
+
+    if (map && isPreparing===2) {
+      const vergangenerSpielzug = spielzuege[currentSpielzugIndex-1];
+      if (vergangenerSpielzug?.koordinaten) {
+          const [lat, lng] = vergangenerSpielzug.koordinaten.split(",");
+          let calculatedDistance = 20000;
+              const lat2 = selectedCoordinates.current.lat
+              const lng2 = selectedCoordinates.current.lng
+              calculatedDistance = parseInt(calculateHaversineDistance(
+                parseFloat(lat),
+                parseFloat(lng),
+                parseFloat(lat2),
+                parseFloat(lng2)
+              ));
+
+
+          console.log("distanz:",calculatedDistance);
+          setDistance(calculatedDistance);
+          setScore(20000 - calculatedDistance);// Berechnung des Scores aus ermittelter Distanz und halben Erdumfang
+
+
+        // Marker und Linie für den vorherigen Spielzug anzeigen
+        const vorbereitenderMarker = L.marker([parseFloat(lat), parseFloat(lng)])
+          .addTo(map)
+          .bindPopup(
+            `Gesuchte Stadt: ${vergangenerSpielzug.stadtName} | Distanz: ${calculatedDistance}`
+          )
+          .openPopup();
+
+
+           const line = L.polyline(
+          [
+            [lat2, lng2], // Spieler-Tipp
+            [parseFloat(lat), parseFloat(lng)], // Ziel
+          ],
+          {
+            color: "blue",
+            weight: 3,
+            dashArray: "5, 10",
+          }
+        ).addTo(map);
+
+        // Entferne Marker nach 5 Sekunden löschen
+        setTimeout(() => {
+          if (map.hasLayer(vorbereitenderMarker)) {
+            map.removeLayer(vorbereitenderMarker);
+          }
+          if (map.hasLayer(line)) {
+            map.removeLayer(line);
+          }
+        }, 5000);
+
       }
     }
-  }, [timer, isPreparing]);
+  }, [map, isPreparing, currentSpielzugIndex, spielzuege]);
+
+  // Effekt: Klickereignis für Kartenauswahl hinzufügen
+  useEffect(() => {
+    if (map) {
+      map.on("click", handleClick); // Klick-Handler hinzufügen
+      return () => {
+        map.off("click", handleClick); // Cleanup: Event-Handler entfernen
+      };
+    }
+  }, [map]);
+
+  // Cleanup-Effekt: Entferne Marker beim Komponenten-Unmount
+  useEffect(() => {
+    return () => {
+      if (currentMarker.current && map) {
+        map.removeLayer(currentMarker.current);
+      }
+    };
+  }, [map]);
+
+  useEffect(() => {
+  if (gameDetails && userDetails) {
+    if (gameDetails.spieler1Name === userDetails.username) {
+      setIsPlayer1(true);
+    } else {
+      setIsPlayer1(false);
+    }
+  }
+}, [gameDetails, userDetails]);
+
+
+  // =========================================
+  // ** Funktionen **
+  // =========================================
 
   // Initiale Daten abrufen
   const fetchInitialData = async () => {
@@ -59,12 +210,9 @@ const Game = () => {
       });
       setGameDetails(gameResponse.data);
       setSpieler1Bool(gameResponse.data.spieler1Id === userResponse.data.userID);
-
-      // Initiale Spielzüge aus den GameDetails laden
-      setSpielzuege(gameResponse.data.spielzuege || []); // Setze initiale Spielzüge
+      setSpielzuege(gameResponse.data.spielzuege || []);
     } catch (error) {
       console.error("Fehler beim Abrufen der Daten:", error);
-      alert("Fehler beim Abrufen der Spielinformationen.");
     }
   };
 
@@ -72,46 +220,58 @@ const Game = () => {
   const setupWebSocket = () => {
     const socket = new SockJS("http://localhost:8080/websocket");
     stompClient = Stomp.over(socket);
-
-    stompClient.connect({}, () => {
+    stompClient.connect({}, (frame) => {
+      console.log("Connected to WebSocket:", frame);
+      setConnected(true);
       stompClient.subscribe(`/topic/game/${gameId}/guess`, (message) => {
         const newGuess = JSON.parse(message.body);
         updateSpielzug(newGuess);
       });
     });
-
-    stompClient.onStompError = (frame) => {
-      console.error("WebSocket Error: ", frame.headers["message"]);
-    };
   };
 
+  // WebSocket-Verbindung trennen
   const disconnectWebSocket = () => {
     if (stompClient) {
       stompClient.disconnect(() => {
         console.log("WebSocket disconnected");
+        setConnected(false);
       });
     }
   };
 
-  // Spielzug aktualisieren
+  // Spielzug-Daten aktualisieren
   const updateSpielzug = (newGuess) => {
-  setSpielzuege((prevSpielzuege) =>
-    prevSpielzuege.map((spielzug) =>
-      spielzug.spielZugId === newGuess.spielZugId
-        ? {
-            ...spielzug,
-            guessSpieler1: newGuess.guessSpieler1,
-            guessSpieler2: newGuess.guessSpieler2,
-            scoreSpieler1: spielzug.scoreSpieler1 || newGuess.scoreSpieler1, // Nur setzen, wenn nicht vorhanden
-            scoreSpieler2: spielzug.scoreSpieler2 || newGuess.scoreSpieler2, // Nur setzen, wenn nicht vorhanden
-          }
-        : spielzug
-    )
-  );
+   //ToDo
+    /*setSpielzuege((prevSpielzuege) =>
+      prevSpielzuege.map((spielzug) =>
+        spielzug.spielZugId === newGuess.spielZugId
+          ? { ...spielzug, ...newGuess }
+          : spielzug
+      )
+    );*/
+  };
+
+  //Map-Klick Aktionen
+   const handleClick = (e) => {
+        const { lat, lng } = e.latlng;
+        // Entferne bestehenden Marker
+        if (currentMarker.current) {
+          map.removeLayer(currentMarker.current);
+        }
+
+        // Neuen Marker setzen
+        currentMarker.current = L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(`Du hast hier geklickt: <br>Breite: ${lat.toFixed(5)}, Länge: ${lng.toFixed(5)}`)
+          .openPopup();
+
+        selectedCoordinates.current = { lat, lng }; // Koordinaten speichern
+        console.log("Ausgewählte Koordinaten:", selectedCoordinates.current);
 };
 
 
-  // Guess an REST-Endpoint senden
+  // Benutzerantwort senden
   const submitGuess = async () => {
     if (!spielzuege[currentSpielzugIndex]) return;
 
@@ -119,13 +279,14 @@ const Game = () => {
 
     const payload = {
       spielId: gameId,
-      spielZugId: spielZugId,
+      spielZugId,
       spielZugScore: score,
-      spieler1Bool: spieler1Bool,
+      spieler1Bool,
+      spielZugGuess: `${selectedCoordinates.current.lat.toFixed(4)},${selectedCoordinates.current.lng.toFixed(4)}`
     };
 
     try {
-      await axios.post(`http://localhost:8080/rest/game/submitGuess`, payload, {
+      await axios.post("http://localhost:8080/rest/game/submitGuess", payload, {
         headers: { Authorization: `Bearer ${jwtToken}` },
       });
     } catch (error) {
@@ -133,65 +294,91 @@ const Game = () => {
     }
   };
 
+  // Karte initialisieren
+  const initMap = () => {
+    if (!map && mapRef.current) {
+      const mapInstance = L.map(mapRef.current).setView([51.505, -0.09], 5);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }).addTo(mapInstance);
+      setMap(mapInstance);
+
+       // initialen Marker setzen
+       const lat = 52.51497377167247
+       const lng = 9.265730853751185
+        currentMarker.current = L.marker([lat, lng])
+          .addTo(mapInstance)
+          .bindPopup(`Klicke die Karte!`)
+          .openPopup();
+
+        selectedCoordinates.current = { lat, lng }; // Koordinaten speichern
+        console.log("Ausgewählte Koordinaten:", selectedCoordinates.current);
+    }
+  };
+
+  //Score aufsummieren
+  const updateScore = () =>{
+      if (isPlayer1){
+        setTotalScorePl1(totalScorePl1 + score);
+        }else{
+        setTotalScorePl2(totalScorePl2 + score);
+        }
+  };
+
+  // =========================================
+  // ** Rendering **
+  // =========================================
+
   if (!gameDetails || !userDetails) {
     return <div>Lade...</div>;
   }
 
   return (
     <div>
-      <h1>Spiel Details</h1>
-      <p><strong>spieler1Id:</strong> {gameDetails.spieler1Id}</p>
-      <p><strong>spieler2Id:</strong> {gameDetails.spieler2Id}</p>
-      <p><strong>Spiel-ID:</strong> {gameDetails.gameId}</p>
-      <p><strong>Status:</strong> {gameDetails.status}</p>
-      <p><strong>Kontinent:</strong> {gameDetails.continent}</p>
-      <p><strong>Aktueller Spieler:</strong> {userDetails.username}</p>
-
-      <h2>Timer: {isPreparing ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h2>
-
-      {spielzuege[currentSpielzugIndex] && !isPreparing && (
+      <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2} </strong></p>
+      <h3>Timer: {isPreparing===2 || isPreparing===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h3>
+      {spielzuege[currentSpielzugIndex] && isPreparing===1 && (
         <div>
-          <h3>Aktueller Spielzug</h3>
-          <p><strong>Stadt:</strong> {spielzuege[currentSpielzugIndex]?.stadtName}</p>
-          <input
-            type="text"
-            value={score}
-            onChange={(e) => setScore(e.target.value)}
-            placeholder="Dein Guess"
-          />
+          <p><strong>gesuchte Stadt:{spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
         </div>
       )}
-
-    <h2>Spielzüge</h2>
-        <table border="1">
-          <thead>
-            <tr>
-              <th>Spielzug-ID</th>
-              <th>Stadt</th>
-              <th>Koordinaten</th>
-              <th>Guess Spieler 1</th>
-              <th>Guess Spieler 2</th>
-              <th>Score Spieler 1</th>
-              <th>Score Spieler 2</th>
-            </tr>
-          </thead>
-          <tbody>
-            {spielzuege
-              .filter((_, index) => index < currentSpielzugIndex) // Nur  vergangene Züge anzeigen
-              .map((spielzug) => (
-                <tr key={spielzug.spielZugId}>
-                  <td>{spielzug.spielZugId}</td>
-                  <td>{spielzug.stadtName}</td>
-                  <td>{spielzug.koordinaten}</td>
-                  <td>{spielzug.guessSpieler1 || "-"}</td>
-                  <td>{spielzug.guessSpieler2 || "-"}</td>
-                  <td>{spielzug.scoreSpieler1 || "-"}</td>
-                  <td>{spielzug.scoreSpieler2 || "-"}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-
+      <div ref={mapRef} style={{
+        width: "800px",
+        height: "800px",
+        margin: "20px auto",
+        borderRadius: "50%",
+        overflow: "hidden",
+        border: "2px solid #ccc",
+      }}></div>
+      <h2>Spielzüge</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Spielzug-ID</th>
+            <th>Stadt</th>
+            <th>Koordinaten</th>
+            <th>Guess {gameDetails.spieler1Name}</th>
+            <th>Guess {gameDetails.spieler2Name}</th>
+            <th>Score {gameDetails.spieler1Name}</th>
+            <th>Score {gameDetails.spieler2Name}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {spielzuege
+            .filter((_, index) => index < currentSpielzugIndex)
+            .map((spielzug) => (
+              <tr key={spielzug.spielZugId}>
+                <td>{spielzug.spielZugId}</td>
+                <td>{spielzug.stadtName}</td>
+                <td>{spielzug.koordinaten}</td>
+                <td>{spielzug.guessSpieler1 || "-"}</td>
+                <td>{spielzug.guessSpieler2 || "-"}</td>
+                <td>{spielzug.scoreSpieler1 || "-"}</td>
+                <td>{spielzug.scoreSpieler2 || "-"}</td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
     </div>
   );
 };

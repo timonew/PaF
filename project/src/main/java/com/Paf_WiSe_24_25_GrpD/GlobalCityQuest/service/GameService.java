@@ -33,9 +33,6 @@ public class GameService {
 
     @Autowired
     private SpielerRepository spielerRepository;
-
-    @Autowired
-    private MapLayerRepository mapLayerRepository;
     
     @Autowired
     private SpielzugRepository spielzugRepository;
@@ -146,20 +143,6 @@ public class GameService {
         return waitingGamesDTO;
     }
 
-    public SpielDetailsDTO getSpielDetails(Long spielId) {
-        Spiel spiel = spielRepository.findById(spielId)
-                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden"));
-
-        SpielDetailsDTO spielDetailsDTO = new SpielDetailsDTO();
-        spielDetailsDTO.setSpielId(spiel.getId());
-        spielDetailsDTO.setContinent(spiel.getContinent());
-        spielDetailsDTO.setDifficultyLevel(spiel.getDifficultyLevel());
-        spielDetailsDTO.setStatus(spiel.getStatus());
-        spielDetailsDTO.setSpieler1Name(spiel.getSpieler1().getUserName());
-        spielDetailsDTO.setSpieler2Name(spiel.getSpieler2() != null ? spiel.getSpieler2().getUserName() : null);
-        
-        return spielDetailsDTO;
-    }
     
     /**
      * Spieler 2 sendet eine Anfrage an Spieler 1.
@@ -277,6 +260,8 @@ public class GameService {
         GameInitDTO dto = new GameInitDTO();
         dto.setSpieler1Id(spieler1.getId());
         dto.setSpieler2Id(spieler2.getId());
+        dto.setSpieler1Name(spieler1.getUserName());
+        dto.setSpieler2Name(spieler2.getUserName());
         dto.setGameId(spiel.getId());
         dto.setStatus(spiel.getStatus());
         dto.setContinent(spiel.getContinent());
@@ -290,7 +275,7 @@ public class GameService {
         dto.setSpielzuege(spielzüge.stream().map(spielzug -> {
             SpielzugDTO spielzugDTO = new SpielzugDTO();
             spielzugDTO.setSpielZugId(spielzug.getId());
-            System.out.println("setSpielZugId"+spielzug.getId());
+            
             // Stadt aus dem Spielzug abrufen
             Stadt stadt = spielzug.getStadt();
             if (stadt != null) {
@@ -311,7 +296,7 @@ public class GameService {
     }
     
     @Transactional
-    public void processGuess(Long gameId,Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool) {
+    public void processGuess(Long gameId,Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool,String spielZugGuessStr) {
         // Spiel validieren
         Optional<Spielzug> moveOpt = spielzugRepository.findById(spielZugId);
         if (moveOpt.isEmpty()) {
@@ -321,9 +306,11 @@ public class GameService {
         Spielzug move = moveOpt.get();
               
         if (spieler1Bool) {
-        	move.setScoreSpieler1(spielZugScore);        	
+        	move.setScoreSpieler1(spielZugScore);
+        	move.setGuessSpieler1(spielZugGuessStr); 
         } else {
         	move.setScoreSpieler2(spielZugScore);
+        	move.setGuessSpieler2(spielZugGuessStr); 
         }
         
 
@@ -335,8 +322,10 @@ public class GameService {
         broadcastDTO.setSpielZugId(move.getId());
         if (spieler1Bool) {
         	broadcastDTO.setScoreSpieler1(move.getScoreSpieler1());
+        	broadcastDTO.setGuessSpieler1(move.getGuessSpieler1());
         } else {
         	broadcastDTO.setScoreSpieler2(move.getScoreSpieler2());
+        	broadcastDTO.setGuessSpieler2(move.getGuessSpieler2());
         }
         
         // Broadcast durchführen
