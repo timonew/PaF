@@ -8,6 +8,16 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        #game-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        #map-container {
+            flex: 1; /* Karte nimmt den verfügbaren Platz */
+            margin-right: 20px; /* Etwas Abstand zur Tabelle */
+        }
+
         #map {
             top: 100px;
             width: 1200px;
@@ -17,12 +27,27 @@
             border-radius: 1200px;
         }
 
-        #header {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
+        #table-container {
+            width: 300px; /* Definiere die Breite der Tabelle */
+            max-height: 500px; /* Optional: maximale Höhe für die Tabelle */
+            overflow-y: auto; /* Scrollbar für die Tabelle, falls sie zu lang wird */
         }
+
+        #game-log {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #game-log th, #game-log td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #game-log th {
+            background-color: #f4f4f4;
+        }
+
 
     </style>
 </head>
@@ -52,7 +77,30 @@
 <div id="result" style="margin-top: 10px; font-weight: bold;"></div>
 
 <!-- Karte -->
-<div id="map"></div>
+<!-- <div id="map"></div> -->
+
+
+<div id="game-container">
+    <div id="map-container">
+        <div id="map" style="height: 500px;"></div>
+    </div>
+    <div
+            id="table-container">
+        <h2>Spielverlauf</h2>
+        <table id="game-log">
+            <thead>
+            <tr>
+                <th>Stadt</th>
+                <th>Distanz</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Hier wird die Tabelle dynamisch aktualisiert -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>

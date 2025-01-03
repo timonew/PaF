@@ -11,6 +11,11 @@ const cities = [
 
 
 let timer, selectedCity, playerMarker;
+let lastCityMarker = null;
+let lastDistanceLine = null;
+let roundCounter = 0; // Zählvariable für die Anzahl der Runden
+const maxRounds = 2; // Maximale Anzahl der Runden
+let totalDistance = 0;
 
 // Initialisiere die Karte
 var map = L.map('map').setView([51.505, -0.09], 5); // Koordinaten: Lat/Lng und Zoom-Level
@@ -21,6 +26,27 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/
 
 }).addTo(map);
 
+// Funktion, um die Tabelle zu aktualisieren
+function updateTable(cityName, distance, message = null) {
+    const tableBody = document.querySelector("#game-log tbody");
+    const newRow = document.createElement("tr");
+
+    const cityCell = document.createElement("td");
+    cityCell.textContent = cityName;
+
+    const distanceCell = document.createElement("td");
+    if (message) {
+        distanceCell.textContent = message;
+    } else {
+        distanceCell.textContent = distance;
+
+        totalDistance += parseFloat(distance);
+    }
+
+    newRow.appendChild(cityCell);
+    newRow.appendChild(distanceCell);
+    tableBody.appendChild(newRow);
+}
 
 
 // Haversine-Formel für Entfernung
@@ -47,7 +73,7 @@ function toRadians(degrees) {
 // Timer starten
 function startTimerWithCountdown() {
     clearTimeout(timer);
-    let timeLeft = 10;
+    let timeLeft = 5;
     const timerElement = document.getElementById('timer');
     const countdown = setInterval(() => {
         if (timeLeft <= 0) {
@@ -63,21 +89,34 @@ function startTimerWithCountdown() {
 
 // Entfernung berechnen
 function calculateDistance() {
-    if (!playerMarker) { //prüft, ob ein Marker gesetzt wurde
-        alert("Kein Marker gesetzt!");
-        return;
+    if (!playerMarker) {
+        // kein Marker gesetzt, maximale Distanz verwenden
+        const maxDistance = 20000;
+        alert("kein Marker wurde gesetzt! Eine Maximale Distanz von 20.000km wird angenommen");
+        totalDistance += maxDistance;
+
+        // Tabelle aktualisieren
+        updateTable(selectedCity.name, maxDistance.toFixed(2) + " km", "kein Marker gesetzt (max Distance 20.000km)");
+
+
+        setTimeout(() => {
+            startNewRound();
+        }, 1000);
+        return; // Beende die Funktion hier, um weiteren Code nicht auszuführen
     }
+
+    //Wenn ein Marker gesetzt wurde, berechne die Distanz
     const playerLat = playerMarker.getLatLng().lat;
     const playerLng = playerMarker.getLatLng().lng;
     const cityLat = selectedCity.lat;
     const cityLng = selectedCity.lng;
     const distance = calculateHaversineDistance(playerLat, playerLng, cityLat, cityLng);
 
-    L.marker([cityLat, cityLng]).addTo(map)
+    lastCityMarker = L.marker([cityLat, cityLng]).addTo(map)
         .bindPopup(`${selectedCity.name}`)
         .openPopup();
 
-    const distanceLine = L.polyline(
+    lastDistanceLine = L.polyline(
         [
             [playerLat, playerLng], // Startpunkt: Spieler-Tipp
             [cityLat, cityLng]      // Endpunkt: Gesuchte Stadt
@@ -94,17 +133,54 @@ function calculateDistance() {
         resultElement.innerHTML = `Entfernung zur gesuchten Stadt "${selectedCity.name}": ${distance.toFixed(2)} km`;
     }
 
+    // Tabelle aktualisieren
+    updateTable(selectedCity.name, distance.toFixed(2)+" km");
+
+    // Startet die nächste Runde nach 3 Sekunden
+    setTimeout(() => {
+        startNewRound();
+    }, 3000);
 }
 
 // Neue Runde starten
 function startNewRound() {
+
+    // Überprüfe, ob die maximale Rundenzahl erreicht ist
+    roundCounter++;
+    if (roundCounter > maxRounds) {
+        alert(`Spiel beendet, Danke fürs spielen! Deine Gesamtdisanz beträgt: ${totalDistance.toFixed(2)} km`);
+
+        //Gesamtdistanz zur Tabelle hinzufügen
+        const tableBody =document.querySelector("#game-log tbody");
+        const summaryRow = document.createElement("tr");
+        summaryRow.innerHTML = `
+            <td><strong>Gesamtdistanz</strong></td>
+            <td><strong>${totalDistance.toFixed(2)} km</strong></td>
+        `;
+        tableBody.appendChild(summaryRow);
+
+        return;
+    }
+
+    // Entferne alten Stadt-Marker
+    if (lastCityMarker){
+        map.removeLayer(lastCityMarker);
+        lastCityMarker = null;
+    }
+
+    //Entferne alte Entfernungslinie
+    if (lastDistanceLine) {
+        map.removeLayer(lastDistanceLine);
+        lastDistanceLine = null;
+    }
     selectedCity = cities[Math.floor(Math.random() * cities.length)];
     document.getElementById('current-city').textContent = selectedCity.name;
-    startTimerWithCountdown();
+
     if (playerMarker) {
         map.removeLayer(playerMarker);
         playerMarker = null;
     }
+    startTimerWithCountdown();
 }
 
 
