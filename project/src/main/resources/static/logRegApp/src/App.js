@@ -7,7 +7,7 @@ import Register from './components/Register';
 import Game from "./components/Game";
 import Test from "./components/test";
 import Lobby from './components/Lobby';
-import GameLFL from './components/Game_leaflet';
+
 
 
 // ProtectedRoute-Komponente: Umleitung, falls der Benutzer nicht authentifiziert ist
@@ -28,7 +28,6 @@ const App = () => {
                  
                 <Route path="/test" element={<Test />} />
 				
-				<Route path="/gameLfl" element={<GameLFL />} />
 
                 {/* Registrierungs-Route */}
                 <Route path="/register" element={<Register />} />
