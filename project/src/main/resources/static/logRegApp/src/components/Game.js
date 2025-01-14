@@ -58,6 +58,7 @@ const Game = () => {
   const [totalScorePl2, setTotalScorePl2]=useState(0);
   const [isPlayer1,setIsPlayer1] = useState(false);
   const navigate = useNavigate();
+  const [newScore,setNewScore] = useState(null);
   let stompClient = null; // WebSocket-Client
 
 
@@ -223,10 +224,20 @@ const Game = () => {
     stompClient.connect({}, (frame) => {
       console.log("Connected to WebSocket:", frame);
       setConnected(true);
+
+      //Websocket für Spielzugwerte GuessBroadcastDTO
       stompClient.subscribe(`/topic/game/${gameId}/guess`, (message) => {
         const newGuess = JSON.parse(message.body);
         updateSpielzug(newGuess);
       });
+
+      //Websocket nur für Scorewerte
+      stompClient.subscribe(`/topic/game/${gameId}/score`, (message) => {
+        setNewScore(JSON.parse(message.body));
+        console.log(newScore);
+      });
+
+
     });
   };
 

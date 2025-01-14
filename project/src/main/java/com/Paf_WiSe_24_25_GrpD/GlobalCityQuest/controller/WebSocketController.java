@@ -5,6 +5,7 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameAnswerDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GuessBroadcastDTO;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.ScoreBroadcastDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameInitDTO;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -56,6 +57,11 @@ public class WebSocketController {
         String destination = "/topic/game/" + gameId + "/guess";
         messagingTemplate.convertAndSend(destination, guessDTO);
         System.out.println("Guess-Daten über WebSocket gesendet: " + guessDTO);
+    }
+    
+    public void broadcastScore(Long gameId, ScoreBroadcastDTO scoreDTO) {
+        String destination = "/topic/game/" + gameId + "/score";
+        messagingTemplate.convertAndSend(destination, scoreDTO);
     }
 
 }

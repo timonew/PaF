@@ -296,41 +296,62 @@ public class GameService {
     }
     
     @Transactional
-    public void processGuess(Long gameId,Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool,String spielZugGuessStr) {
-        // Spiel validieren
+    public void processGuess(Long gameId, Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool, String spielZugGuessStr) {
+        // Spielzug validieren
         Optional<Spielzug> moveOpt = spielzugRepository.findById(spielZugId);
         if (moveOpt.isEmpty()) {
             throw new IllegalArgumentException("Spielzug nicht gefunden mit ID: " + spielZugId);
         }
 
         Spielzug move = moveOpt.get();
-              
+
+        // Score und Guess für den aktuellen Spielzug setzen
         if (spieler1Bool) {
-        	move.setScoreSpieler1(spielZugScore);
-        	move.setGuessSpieler1(spielZugGuessStr); 
+            move.setScoreSpieler1(spielZugScore);
+            move.setGuessSpieler1(spielZugGuessStr);
         } else {
-        	move.setScoreSpieler2(spielZugScore);
-        	move.setGuessSpieler2(spielZugGuessStr); 
+            move.setScoreSpieler2(spielZugScore);
+            move.setGuessSpieler2(spielZugGuessStr);
         }
-        
 
         // Änderungen im Repository speichern
         spielzugRepository.save(move);
+
+        // Liste aller Spielzüge für das aktuelle Spiel abrufen
+        List<Spielzug> moves = spielzugRepository.findBySpielId(gameId);
+
+        // Gesamtscores berechnen
+        long totalScoreSpieler1 = calculateTotalScoreForPlayer(moves, true);
+        long totalScoreSpieler2 = calculateTotalScoreForPlayer(moves, false);
 
         // DTO für den WebSocket-Broadcast erstellen
         GuessBroadcastDTO broadcastDTO = new GuessBroadcastDTO();
         broadcastDTO.setSpielZugId(move.getId());
         if (spieler1Bool) {
-        	broadcastDTO.setScoreSpieler1(move.getScoreSpieler1());
-        	broadcastDTO.setGuessSpieler1(move.getGuessSpieler1());
+            broadcastDTO.setScoreSpieler1(move.getScoreSpieler1());
+            broadcastDTO.setGuessSpieler1(move.getGuessSpieler1());
         } else {
-        	broadcastDTO.setScoreSpieler2(move.getScoreSpieler2());
-        	broadcastDTO.setGuessSpieler2(move.getGuessSpieler2());
+            broadcastDTO.setScoreSpieler2(move.getScoreSpieler2());
+            broadcastDTO.setGuessSpieler2(move.getGuessSpieler2());
         }
-        
+
+        ScoreBroadcastDTO scoreBroadcastDTO = new ScoreBroadcastDTO();
+        scoreBroadcastDTO.setScoreSpieler1(totalScoreSpieler1); // Gesamtscore Spieler 1
+        scoreBroadcastDTO.setScoreSpieler2(totalScoreSpieler2); // Gesamtscore Spieler 2
+
         // Broadcast durchführen
         webSocketController.broadcastGuess(gameId, broadcastDTO);
+        webSocketController.broadcastScore(gameId, scoreBroadcastDTO);
 
-        System.out.println("Guess erfolgreich verarbeitet: SpielZugId=" + spielZugId );
+        System.out.println(scoreBroadcastDTO + " " + totalScoreSpieler1 + " " + totalScoreSpieler2);
     }
+
+    // Methode zur Berechnung des Gesamtscores
+    private long calculateTotalScoreForPlayer(List<Spielzug> moves, boolean isPlayer1) {
+        return moves.stream()
+            .mapToLong(move -> isPlayer1 ? move.getScoreSpieler1() : move.getScoreSpieler2())
+            .sum();
+    }
+
+
 }
