@@ -43,7 +43,7 @@ const Game = () => {
   const [userDetails, setUserDetails] = useState(null); // Benutzerdetails
   const [currentSpielzugIndex, setCurrentSpielzugIndex] = useState(0); // Aktueller Spielzug
   const [timer, setTimer] = useState(5); // Timer für Züge (Vorbereitung/Spielzeit)
-  const [isPreparing, setIsPreparing] = useState(0); // Status des Vorbereitungsmodus
+  const [gameModus, setgameModus] = useState(0); // Status des Vorbereitungsmodus
   const [spieler1Bool, setSpieler1Bool] = useState(true); // Spielerzuordnung
   const [score, setScore] = useState(0); // Punktzahl für den aktuellen Zug
   const [distance, setDistance] = useState(20000); // Distanz für den aktuellen Zug
@@ -83,17 +83,17 @@ const Game = () => {
       }, 1000);
       return () => clearInterval(interval); // Cleanup: Interval beenden
     } else if (timer === 0) {
-          if(isPreparing === 0) setIsPreparing(2);
-          if (isPreparing === 2) {
+          if(gameModus === 0) setgameModus(2);
+          if (gameModus === 2) {
             // Wechsel von Vorbereitung in den Spielmodus
             updateScore();
-            setIsPreparing(1);
+            setgameModus(1);
             setTimer(20); //Sekunden für Spielzug
           }
-          if (isPreparing === 1) {
+          if (gameModus === 1) {
             // Wechsel von Spielzug zurück in den Vorbereitungmodus
             submitGuess(); // Benutzerantwort senden
-            setIsPreparing(2);
+            setgameModus(2);
             setTimer(8); //Sekunden für Vorbereitung
             setCurrentSpielzugIndex((prevIndex) => prevIndex + 1);
             if (currentSpielzugIndex === 10){
@@ -102,13 +102,13 @@ const Game = () => {
                 }
           }
     }
-  }, [timer, isPreparing]); // Läuft, wenn sich `timer` oder `isPreparing` ändert
+  }, [timer, gameModus]); // Läuft, wenn sich `timer` oder `gameModus` ändert
 
   // Effekt: Initialisiere Leaflet-Karte
   useEffect(() => {
     if (!map) initMap(); // Karte initialisieren, falls noch nicht vorhanden
 
-    if (map && isPreparing===2) {
+    if (map && gameModus===2) {
       const vergangenerSpielzug = spielzuege[currentSpielzugIndex-1];
       if (vergangenerSpielzug?.koordinaten) {
           const [lat, lng] = vergangenerSpielzug.koordinaten.split(",");
@@ -161,7 +161,7 @@ const Game = () => {
 
       }
     }
-  }, [map, isPreparing, currentSpielzugIndex, spielzuege]);
+  }, [map, gameModus, currentSpielzugIndex, spielzuege]);
 
   // Effekt: Klickereignis für Kartenauswahl hinzufügen
   useEffect(() => {
@@ -336,8 +336,8 @@ const Game = () => {
   return (
     <div>
       <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2} </strong></p>
-      <h3>Timer: {isPreparing===2 || isPreparing===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h3>
-      {spielzuege[currentSpielzugIndex] && isPreparing===1 && (
+      <h3>Timer: {gameModus===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h3>
+      {spielzuege[currentSpielzugIndex] && gameModus===1 && (
         <div>
           <p><strong>gesuchte Stadt:{spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
         </div>

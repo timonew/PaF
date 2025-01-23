@@ -205,7 +205,11 @@ public class RestApiController {
     }
 
     @GetMapping("/game/init")
-    public ResponseEntity<GameInitDTO> getGameInit(@RequestParam Long gameId) {
+    public ResponseEntity<GameInitDTO> getGameInit(@RequestParam Long gameId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        
     	System.out.println("GET /game/init called with gameId: " + gameId); // Log the incoming request
          try {
         	 GameInitDTO gameInitDTO = gameService.getgameInitDTO(gameId);
@@ -215,6 +219,8 @@ public class RestApiController {
             return ResponseEntity.status(500).body(null);
         }
     }
+    
+    
     
     // Update des Spielstatus
     @PostMapping("/game/updateStatus")
