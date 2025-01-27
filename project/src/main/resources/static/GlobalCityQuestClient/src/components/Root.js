@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const Root = () => {
     return (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <h1>Willkommen auf unserer Plattform</h1>
+            <h1>Willkommen beim Global City Quest</h1>
             <p>Bitte wählen Sie eine der folgenden Optionen:</p>
             <div>
                 <Link to="/login">

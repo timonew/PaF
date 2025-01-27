@@ -192,13 +192,13 @@ const Lobby = () => {
 
   return (
     <div>
-      <h1>Willkommen in der Lobby</h1>
+      <h3>Willkommen beim Global City Guess</h3>
       {userDetails ? (
         <div>
           <p>Angemeldeter Benutzer: {userDetails.username}</p>
-          <p>mit der ID: {userDetails.userID}</p>
 
-          <h2>Spiel starten</h2>
+
+          <h5>Schlage ein Spiel vor oder wähle ein vorhandenes aus!</h5>
           <div>
             <label>Schwierigkeitsgrad:</label>
             <select value={difficulty} onChange={(e) => setDifficulty(parseInt(e.target.value, 10))}>
@@ -211,14 +211,14 @@ const Lobby = () => {
             <label>Kontinent:</label>
             <select value={continent} onChange={(e) => setContinent(e.target.value)}>
               <option value="Europe">Europa</option>
-              <option value="Asia">Asien</option>
+/*              <option value="Asia">Asien</option>
               <option value="Africa">Afrika</option>
               <option value="North America">Nordamerika</option>
               <option value="South America">Südamerika</option>
-              <option value="Australia">Australien</option>
+              <option value="Australia">Australien</option>*/
             </select>
           </div>
-          <button onClick={startGame}>Spiel starten</button>
+          <button onClick={startGame}>Spiel vorschlagen</button>
 
           <h2>Wartende Spiele</h2>
           {waitingGames.length > 0 ? (
@@ -228,7 +228,6 @@ const Lobby = () => {
                   <th>Spieler 1</th>
                   <th>Kontinent</th>
                   <th>Schwierigkeitsgrad</th>
-                  <th>Spieler1ID</th>
                   <th>Aktion</th>
                 </tr>
               </thead>
@@ -238,10 +237,9 @@ const Lobby = () => {
                     <td>{game.spieler1Name}</td>
                     <td>{game.continent}</td>
                     <td>{game.difficultyLevel}</td>
-                    <td>{game.spieler1ID}</td>
                     <td>
                        {game.spieler1Name === userDetails.username ? (
-                        <button onClick={() => stopGame(game.id)}>Spiel stoppen</button>
+                        <button onClick={() => stopGame(game.id)}>Vorschlag zurücknehmen</button>
                       ) : (
                         <button onClick={() => joinRequest(game.id, game.spieler1ID)}>Spiel beitreten</button>
                       )}

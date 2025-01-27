@@ -295,6 +295,8 @@ public class GameService {
         return dto;
     }
     
+    
+    
     @Transactional
     public void processGuess(Long gameId, Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool, String spielZugGuessStr) {
         // Spielzug validieren
@@ -320,10 +322,7 @@ public class GameService {
         // Liste aller Spielzüge für das aktuelle Spiel abrufen
         List<Spielzug> moves = spielzugRepository.findBySpielId(gameId);
 
-        // Gesamtscores berechnen
-        long totalScoreSpieler1 = calculateTotalScoreForPlayer(moves, true);
-        long totalScoreSpieler2 = calculateTotalScoreForPlayer(moves, false);
-
+ 
         // DTO für den WebSocket-Broadcast erstellen
         GuessBroadcastDTO broadcastDTO = new GuessBroadcastDTO();
         broadcastDTO.setSpielZugId(move.getId());
@@ -335,23 +334,18 @@ public class GameService {
             broadcastDTO.setGuessSpieler2(move.getGuessSpieler2());
         }
 
-        ScoreBroadcastDTO scoreBroadcastDTO = new ScoreBroadcastDTO();
-        scoreBroadcastDTO.setScoreSpieler1(totalScoreSpieler1); // Gesamtscore Spieler 1
-        scoreBroadcastDTO.setScoreSpieler2(totalScoreSpieler2); // Gesamtscore Spieler 2
 
         // Broadcast durchführen
         webSocketController.broadcastGuess(gameId, broadcastDTO);
-        webSocketController.broadcastScore(gameId, scoreBroadcastDTO);
-
-        System.out.println(scoreBroadcastDTO + " " + totalScoreSpieler1 + " " + totalScoreSpieler2);
+       
     }
 
-    // Methode zur Berechnung des Gesamtscores
-    private long calculateTotalScoreForPlayer(List<Spielzug> moves, boolean isPlayer1) {
-        return moves.stream()
-            .mapToLong(move -> isPlayer1 ? move.getScoreSpieler1() : move.getScoreSpieler2())
-            .sum();
-    }
+	/*
+	 * // Methode zur Berechnung des Gesamtscores private long
+	 * calculateTotalScoreForPlayer(List<Spielzug> moves, boolean isPlayer1) {
+	 * return moves.stream() .mapToLong(move -> isPlayer1 ? move.getScoreSpieler1()
+	 * : move.getScoreSpieler2()) .sum(); }
+	 */
 
 
 }

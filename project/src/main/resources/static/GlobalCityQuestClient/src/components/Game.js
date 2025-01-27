@@ -5,6 +5,7 @@ import axios from "axios";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import L from "leaflet"; // Leaflet importieren
+import "./custom.css";
 
 // Hilfsfunktionen
 // Haversine-Formel für Entfernung
@@ -43,7 +44,7 @@ const Game = () => {
   const [userDetails, setUserDetails] = useState(null); // Benutzerdetails
   const [currentSpielzugIndex, setCurrentSpielzugIndex] = useState(0); // Aktueller Spielzug
   const [timer, setTimer] = useState(5); // Timer für Züge (Vorbereitung/Spielzeit)
-  const [isPreparing, setIsPreparing] = useState(0); // Status des Vorbereitungsmodus
+  const [gameModus, setGameModus] = useState(0); // Status des Vorbereitungsmodus
   const [spieler1Bool, setSpieler1Bool] = useState(true); // Spielerzuordnung
   const [score, setScore] = useState(0); // Punktzahl für den aktuellen Zug
   const [distance, setDistance] = useState(20000); // Distanz für den aktuellen Zug
@@ -54,15 +55,18 @@ const Game = () => {
   const currentMarker= useRef(null); // Aktueller gesetzter Marker
   const selectedCoordinates = useRef(null); // Benutzer-Auswahlkoordinaten
   const mapRef = useRef(null); // Referenz für das Map-Container-Div
-  const [totalScorePl1, setTotalScorePl1]=useState(0);
-  const [totalScorePl2, setTotalScorePl2]=useState(0);
   const [isPlayer1,setIsPlayer1] = useState(false);
   const navigate = useNavigate();
   const [newScore,setNewScore] = useState(null);
+  const [endGameMessage,setEndGameMessage]=useState(null);
+  const [countdown, setCountdown] = useState(null);
   let stompClient = null; // WebSocket-Client
+  const totalScorePl1 = useRef(0);
+  const totalScorePl2 = useRef(0);
 
 
-  // =========================================
+
+    // =========================================
   // ** useEffect Hooks **
   // =========================================
 
@@ -71,46 +75,19 @@ const Game = () => {
     loadExternalCSS("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"); // CSS für Leaflet laden
     fetchInitialData(); // Daten abrufen (Spiel & Benutzer)
     setupWebSocket(); // WebSocket-Verbindung einrichten
+
     return () => {
       disconnectWebSocket(); // Verbindung bei Cleanup trennen
     };
   }, []); // Läuft nur einmal bei Komponent-Mount
 
-  // Effekt: Timer-Verwaltung für Vorbereitung und Spielzug
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval); // Cleanup: Interval beenden
-    } else if (timer === 0) {
-          if(isPreparing === 0) setIsPreparing(2);
-          if (isPreparing === 2) {
-            // Wechsel von Vorbereitung in den Spielmodus
-            updateScore();
-            setIsPreparing(1);
-            setTimer(20); //Sekunden für Spielzug
-          }
-          if (isPreparing === 1) {
-            // Wechsel von Spielzug zurück in den Vorbereitungmodus
-            submitGuess(); // Benutzerantwort senden
-            setIsPreparing(2);
-            setTimer(8); //Sekunden für Vorbereitung
-            setCurrentSpielzugIndex((prevIndex) => prevIndex + 1);
-            if (currentSpielzugIndex === 10){
-                alert("Spiel beendet");
-                navigate("/lobby");
-                }
-          }
-    }
-  }, [timer, isPreparing]); // Läuft, wenn sich `timer` oder `isPreparing` ändert
 
   // Effekt: Initialisiere Leaflet-Karte
   useEffect(() => {
     if (!map) initMap(); // Karte initialisieren, falls noch nicht vorhanden
 
-    if (map && isPreparing===2) {
-      const vergangenerSpielzug = spielzuege[currentSpielzugIndex-1];
+    if (map && gameModus===2) {
+      const vergangenerSpielzug = spielzuege[currentSpielzugIndex];
       if (vergangenerSpielzug?.koordinaten) {
           const [lat, lng] = vergangenerSpielzug.koordinaten.split(",");
           let calculatedDistance = 20000;
@@ -122,18 +99,15 @@ const Game = () => {
                 parseFloat(lat2),
                 parseFloat(lng2)
               ));
-
-
           console.log("distanz:",calculatedDistance);
           setDistance(calculatedDistance);
           setScore(20000 - calculatedDistance);// Berechnung des Scores aus ermittelter Distanz und halben Erdumfang
 
-
-        // Marker und Linie für den vorherigen Spielzug anzeigen
-        const vorbereitenderMarker = L.marker([parseFloat(lat), parseFloat(lng)])
+           // Marker und Linie für den vorherigen Spielzug anzeigen
+        let currentMoveMarker = L.marker([parseFloat(lat), parseFloat(lng)])
           .addTo(map)
           .bindPopup(
-            `Gesuchte Stadt: ${vergangenerSpielzug.stadtName} | Distanz: ${calculatedDistance}`
+            `Gesuchte Stadt: ${spielzuege[currentSpielzugIndex].stadtName} | Distanz: ${calculatedDistance}`
           )
           .openPopup();
 
@@ -152,17 +126,24 @@ const Game = () => {
 
         // Entferne Marker nach 5 Sekunden löschen
         setTimeout(() => {
-          if (map.hasLayer(vorbereitenderMarker)) {
-            map.removeLayer(vorbereitenderMarker);
+          if (map.hasLayer(currentMoveMarker)) {
+            map.removeLayer(currentMoveMarker);
           }
           if (map.hasLayer(line)) {
             map.removeLayer(line);
           }
         }, 5000);
 
-      }
+     }
     }
-  }, [map, isPreparing, currentSpielzugIndex, spielzuege]);
+  }, [map, gameModus]);
+
+useEffect(() => {
+  const timeout = setTimeout(() => {
+    submitGuess();
+  }, 3000);
+  return () => clearTimeout(timeout);
+},[distance]);
 
   // Effekt: Klickereignis für Kartenauswahl hinzufügen
   useEffect(() => {
@@ -193,8 +174,30 @@ const Game = () => {
   }
 }, [gameDetails, userDetails]);
 
+  // Countdown-Logik bei Spielende
+  useEffect(() => {
+    if (countdown !== null && countdown > 0) {
+      const interval = setInterval(() => {
+        setCountdown((prevCountdown) => {
+          if (prevCountdown <= 1) {
+            clearInterval(interval);
+            navigate("/lobby"); // Weiterleitung zur Lobby
+            return 0;
+          }
+          return prevCountdown - 1;
+        });
+      }, 1000);
+    }
+  }, [countdown]);
 
-  // =========================================
+  useEffect(() => {
+  if (spielzuege.length > 0) {
+    starteSpielzuege(); // Startet erst, wenn spielzuege gefüllt ist
+  }
+}, [spielzuege]);
+
+
+    // =========================================
   // ** Funktionen **
   // =========================================
 
@@ -225,18 +228,11 @@ const Game = () => {
       console.log("Connected to WebSocket:", frame);
       setConnected(true);
 
-      //Websocket für Spielzugwerte GuessBroadcastDTO
+      //Websocket für Spielzugwerte
       stompClient.subscribe(`/topic/game/${gameId}/guess`, (message) => {
         const newGuess = JSON.parse(message.body);
         updateSpielzug(newGuess);
       });
-
-      //Websocket nur für Scorewerte
-      stompClient.subscribe(`/topic/game/${gameId}/score`, (message) => {
-        setNewScore(JSON.parse(message.body));
-        console.log(newScore);
-      });
-
 
     });
   };
@@ -252,16 +248,25 @@ const Game = () => {
   };
 
   // Spielzug-Daten aktualisieren
-  const updateSpielzug = (newGuess) => {
-   //ToDo
-    /*setSpielzuege((prevSpielzuege) =>
-      prevSpielzuege.map((spielzug) =>
-        spielzug.spielZugId === newGuess.spielZugId
-          ? { ...spielzug, ...newGuess }
-          : spielzug
-      )
-    );*/
-  };
+    const updateSpielzug = (newGuess) => {
+      setSpielzuege((prevSpielzuege) =>
+        prevSpielzuege.map((spielzug) =>
+          spielzug.spielZugId === newGuess.spielZugId
+            ? {
+                ...spielzug,
+                ...newGuess, // Neue Daten einfügen
+                guessSpieler1: newGuess.guessSpieler1 || spielzug.guessSpieler1, // Vorhandene Daten erhalten
+                guessSpieler2: newGuess.guessSpieler2 || spielzug.guessSpieler2,
+                scoreSpieler1: newGuess.scoreSpieler1 || spielzug.scoreSpieler1,
+                scoreSpieler2: newGuess.scoreSpieler2 || spielzug.scoreSpieler2,
+              }
+            : spielzug
+        )
+      );
+      totalScorePl1.current +=  newGuess.scoreSpieler1;
+      totalScorePl2.current +=  newGuess.scoreSpieler2;
+    };
+
 
   //Map-Klick Aktionen
    const handleClick = (e) => {
@@ -280,6 +285,81 @@ const Game = () => {
         selectedCoordinates.current = { lat, lng }; // Koordinaten speichern
         console.log("Ausgewählte Koordinaten:", selectedCoordinates.current);
 };
+
+// Funktion für den Timer
+const startTimer = (duration, callback) => {
+  let timer = duration;
+  setTimer(timer); // Initialen Timer-Wert setzen
+
+  const interval = setInterval(() => {
+    timer -= 1; // Timer Wert verringern
+    setTimer(timer); // Zustand mit reduziertem Wert aktualisieren
+
+    if (timer <= 0) {
+      clearInterval(interval); // Stoppe den Timer, wenn er abgelaufen ist
+      callback(); // Callback auslösen, um zu signalisieren, dass der Timer abgelaufen ist
+    }
+  }, 1000);
+};
+
+// Funktion zum Starten der Spielzüge
+  const starteSpielzuege = () => {
+    const vorbereitungsZeit = 5; // 5 Sekunden initiale Vorbereitung
+    const pausenZeit = 8; // 8 Sekunden Vorbereitung zwischen Spielzügen
+    const spielZeit = 20; // 20 Sekunden Spielzeit pro Spielzug
+
+
+    const initialPreparation = () => {startTimer(vorbereitungsZeit,() =>
+    startDurchlauf(0))};// Starte den Hauptablauf der Spielzüge nach der Vorbereitung
+
+
+    const startDurchlauf = (index) => {
+         setGameModus(1); // Spielmodus aktivieren
+         setCurrentSpielzugIndex(index);
+         startTimer(spielZeit, () => {
+                   // Pause zwischen den Spielzügen
+                  setGameModus(2);
+                  startTimer(pausenZeit, () => {
+                  if (index === spielzuege.length - 1) { // Letzter Spielzug abgeschlossen
+                  endGame();
+                } else {
+                  startDurchlauf(index + 1);
+                   }
+               });
+           });
+    };
+
+  // Starte mit der Initialen Vorbereitung
+  if (gameModus===0){
+    initialPreparation();
+    }
+};
+
+
+// Endsequenz
+const endGame = () => {
+  const currentScorePl1 = totalScorePl1.current;
+  const currentScorePl2 = totalScorePl2.current;
+
+  console.log(currentScorePl1, currentScorePl2);
+
+  if (currentScorePl1 > currentScorePl2) {
+    setEndGameMessage(
+      `Spielende erreicht! ${gameDetails.spieler1Name} hat gewonnen mit ${currentScorePl1} Punkten. Zurück zur Lobby in 5 Sekunden.`
+    );
+  } else if (currentScorePl1 < currentScorePl2) {
+    setEndGameMessage(
+      `Spielende erreicht! ${gameDetails.spieler2Name} hat gewonnen mit ${currentScorePl2} Punkten. Zurück zur Lobby in 5 Sekunden.`
+    );
+  } else {
+    setEndGameMessage(
+      `Spielende erreicht! Unentschieden mit ${currentScorePl1} Punkten. Zurück zur Lobby in 7 Sekunden.`
+    );
+  }
+
+  setCountdown(7);
+};
+
 
 
   // Benutzerantwort senden
@@ -327,14 +407,8 @@ const Game = () => {
     }
   };
 
-  //Score aufsummieren
-  const updateScore = () =>{
-      if (isPlayer1){
-        setTotalScorePl1(totalScorePl1 + score);
-        }else{
-        setTotalScorePl2(totalScorePl2 + score);
-        }
-  };
+
+
 
   // =========================================
   // ** Rendering **
@@ -346,26 +420,12 @@ const Game = () => {
 
   return (
     <div>
-      <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2} </strong></p>
-      <h3>Timer: {isPreparing===2 || isPreparing===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h3>
-      {spielzuege[currentSpielzugIndex] && isPreparing===1 && (
-        <div>
-          <p><strong>gesuchte Stadt:{spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
-        </div>
-      )}
-      <div ref={mapRef} style={{
-        width: "800px",
-        height: "800px",
-        margin: "20px auto",
-        borderRadius: "50%",
-        overflow: "hidden",
-        border: "2px solid #ccc",
-      }}></div>
-      <h2>Spielzüge</h2>
-      <table border="1">
+      <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1.current} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2.current} </strong></p>
+
+       <table>
         <thead>
           <tr>
-            <th>Spielzug-ID</th>
+            <th>Spielzug</th>
             <th>Stadt</th>
             <th>Koordinaten</th>
             <th>Guess {gameDetails.spieler1Name}</th>
@@ -376,10 +436,10 @@ const Game = () => {
         </thead>
         <tbody>
           {spielzuege
-            .filter((_, index) => index < currentSpielzugIndex)
-            .map((spielzug) => (
-              <tr key={spielzug.spielZugId}>
-                <td>{spielzug.spielZugId}</td>
+           .filter((_, index) => index < currentSpielzugIndex)
+           .map((spielzug, index) => (
+            <tr key={spielzug.spielZugId}>
+              <td>{index + 1}</td> {/* Nummer basierend auf dem Index der Map */}
                 <td>{spielzug.stadtName}</td>
                 <td>{spielzug.koordinaten}</td>
                 <td>{spielzug.guessSpieler1 || "-"}</td>
@@ -390,6 +450,30 @@ const Game = () => {
             ))}
         </tbody>
       </table>
+
+      {endGameMessage && (
+        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0" }}>
+          <p>{endGameMessage}</p>
+          {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+        </div>
+      )}
+
+      <h4>Timer: {gameModus===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h4>
+      {gameModus===1 && (
+        <div>
+          <p><strong>gesuchte Stadt:{spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
+        </div>
+      )}
+
+      <div ref={mapRef} style={{
+        width: "800px",
+        height: "800px",
+        margin: "20px auto",
+        borderRadius: "50%",
+        overflow: "hidden",
+        border: "2px solid #ccc",
+      }}></div>
+
     </div>
   );
 };
