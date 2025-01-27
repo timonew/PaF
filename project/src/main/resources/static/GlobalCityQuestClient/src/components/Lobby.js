@@ -19,6 +19,12 @@ const Lobby = () => {
 
   const jwtToken = localStorage.getItem("jwtToken");
 
+ const handleLogout = () => {
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("userDetails");
+    navigate("/login");
+  };
+
   useEffect(() => {
     if (!jwtToken) {
       navigate("/login");
@@ -170,11 +176,8 @@ const Lobby = () => {
 
   const requestAnswer = async (gameId, player2Name, decision) => {
     try {
-      await axios.post(
-        `http://localhost:8080/rest/game/requestAnswer`,
-        { gameId, player2Name, decision },
-        {
-          headers: {
+      await axios.post("http://localhost:8080/rest/game/requestAnswer",{ gameId, player2Name, decision },
+        {headers: {
             Authorization: `Bearer ${jwtToken}`,
             "Content-Type": "application/json",
           },
@@ -195,7 +198,38 @@ const Lobby = () => {
       <h3>Willkommen beim Global City Guess</h3>
       {userDetails ? (
         <div>
-          <p>Angemeldeter Benutzer: {userDetails.username}</p>
+          <p>Angemeldeter Benutzer: {userDetails.username} </p>
+            <p> Spiele gespielt / Spiele gewonnen: {userDetails.gamesPlayed} / {userDetails.gamesWon} </p>
+          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+          <h4>Highscores</h4>
+            {userDetails.highscores && userDetails.highscores.length > 0 ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Schwierigkeitsgrad</th>
+                    <th>Kontinent</th>
+                    <th>Höchster Punktestand</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userDetails.highscores.map((highscore, index) => (
+                    <tr key={index}>
+                      <td>
+                        {highscore.difficultyLevel === 1
+                          ? "Leicht"
+                          : highscore.difficultyLevel === 2
+                          ? "Mittel"
+                          : "Schwer"}
+                      </td>
+                      <td>{highscore.continent}</td>
+                      <td>{highscore.score}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>Keine Highscores verfügbar.</p>
+            )}
 
 
           <h5>Schlage ein Spiel vor oder wähle ein vorhandenes aus!</h5>
@@ -211,11 +245,7 @@ const Lobby = () => {
             <label>Kontinent:</label>
             <select value={continent} onChange={(e) => setContinent(e.target.value)}>
               <option value="Europe">Europa</option>
-/*              <option value="Asia">Asien</option>
-              <option value="Africa">Afrika</option>
-              <option value="North America">Nordamerika</option>
-              <option value="South America">Südamerika</option>
-              <option value="Australia">Australien</option>*/
+              <option value="Asia">Asien</option>
             </select>
           </div>
           <button onClick={startGame}>Spiel vorschlagen</button>

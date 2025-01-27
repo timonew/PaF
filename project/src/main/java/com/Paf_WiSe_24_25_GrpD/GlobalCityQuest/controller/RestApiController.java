@@ -22,6 +22,7 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.filter.JwtUtil;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.GameService;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.UserService;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service.HighscoreService;
 
 
 
@@ -36,12 +37,14 @@ public class RestApiController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final GameService gameService;
+    private final HighscoreService highscoreService;
 
     // Konstruktor-Injektion
-    public RestApiController(UserService userService, JwtUtil jwtUtil, GameService gameService) {
+    public RestApiController(UserService userService, JwtUtil jwtUtil, GameService gameService,HighscoreService highscoreService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.gameService = gameService;
+		this.highscoreService = highscoreService;
     }
 
     // Registrierung des Benutzers
@@ -49,10 +52,8 @@ public class RestApiController {
     public ResponseEntity<RegistrationStatus> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
         try {
             Spieler spieler = new Spieler();
-            spieler.setName(registerRequestDTO.getName());
             spieler.setUserName(registerRequestDTO.getUserName());
             spieler.setPassword(registerRequestDTO.getPassword());
-            spieler.setCurrentscore(0); // Initialisieren des Scores
 
             RegistrationStatus status = userService.registerUser(spieler);
 
@@ -109,12 +110,32 @@ public class RestApiController {
 
         String username = authentication.getName();
         SimpleGameDTO dto = gameService.startGame(gameStartDTO, username);
-
-        // WebSocket: Sende die Spielstartnachricht an alle Spieler, die das Spiel beobachten
-
         
         return ResponseEntity.ok(dto);
     }
+    
+    // Ende eines Spiels
+    @PostMapping("/game/end")
+    public ResponseEntity<String> endGame(@RequestBody Map<String,Long> requestBody, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        System.out.println("Received gameId: " + requestBody.get("gameId"));
+        System.out.println("Received winnerId: " + requestBody.get("winnerId"));
+        
+        Long gameId = requestBody.get("gameId");
+        Long winner = requestBody.get("winnerId");
+        
+        System.out.println("GET /game/end called with gameId: " + gameId);
+        
+		highscoreService.saveHighscore(gameId);
+		userService.saveWinner(gameId,winner);
+        
+        return ResponseEntity.ok("Spielende verarbeitet");
+    }
+    
+    
     // Spiele anzeigen, die auf Spieler warten
     @GetMapping("/game/waiting")
     public ResponseEntity<List<SimpleGameDTO>> getWaitingGames(Authentication authentication) {
@@ -210,7 +231,7 @@ public class RestApiController {
             return ResponseEntity.status(401).build();
         }
         
-    	System.out.println("GET /game/init called with gameId: " + gameId); // Log the incoming request
+    	System.out.println("GET /game/init called with gameId: " + gameId);
          try {
         	 GameInitDTO gameInitDTO = gameService.getgameInitDTO(gameId);
             System.out.println("Game details successfully fetched for gameId " + gameId + ": " + gameInitDTO); 

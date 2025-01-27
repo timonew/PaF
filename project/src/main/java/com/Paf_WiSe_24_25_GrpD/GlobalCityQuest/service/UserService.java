@@ -5,9 +5,13 @@ import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config.RegistrationStatus;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.HighscoreDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.PlayerDetailsDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Highscore;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spiel;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.HighscoreRepository;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,16 +24,19 @@ import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
+	
+	@Autowired
+	private SpielRepository spielRepository;
 
-    private final SpielerRepository spielerRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final HighscoreRepository highscoreRepository;
+	@Autowired
+	private SpielerRepository spielerRepository;
 
-    public UserService(SpielerRepository spielerRepository, PasswordEncoder passwordEncoder,HighscoreRepository highscoreRepository) {
-        this.spielerRepository = spielerRepository;
-        this.passwordEncoder = passwordEncoder;
-		this.highscoreRepository = highscoreRepository;
-    }
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private HighscoreRepository highscoreRepository;
+
 
     // Registrierung eines neuen Benutzers mit Passwortverschlüsselung und Validierung
     public RegistrationStatus registerUser(Spieler spieler) {
@@ -92,8 +99,7 @@ public class UserService implements UserDetailsService {
     private boolean isValid(Spieler spieler) {
         // Validierung der Benutzerinformationen
         return spieler.getUserName() != null && !spieler.getUserName().isEmpty() &&
-               spieler.getPassword() != null && !spieler.getPassword().isEmpty() &&
-               spieler.getName() != null && !spieler.getName().isEmpty();
+               spieler.getPassword() != null && !spieler.getPassword().isEmpty();
     }
 
     private Spieler findUserByUsername(String userName) {
@@ -125,12 +131,32 @@ public class UserService implements UserDetailsService {
             dto.setScore(highscore.getScore());
             return dto;
         }).toList();
+        
+        
 
         PlayerDetailsDTO playerDetailsDTO = new PlayerDetailsDTO();
         playerDetailsDTO.setUsername(spieler.getUserName());
         playerDetailsDTO.setUserID(spieler.getId());
-        playerDetailsDTO.setHighscores(highscoreDTOs); // Highscores des Spielers setzen
+        playerDetailsDTO.setHighscores(highscoreDTOs);
+        playerDetailsDTO.setGamesPlayed(spielRepository.countBySpieler(spieler));
+        playerDetailsDTO.setGamesWon(spielRepository.countByWinner(spieler));
+        
 
         return playerDetailsDTO;
     }
+
+	public void saveWinner(Long gameId, Long winnerId) {
+		 Spiel spiel = spielRepository.findById(gameId)
+	                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
+		 
+		Spieler winner = spielerRepository.findById(winnerId)
+				.orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + winnerId));
+		 
+			 spiel.setWinner(winner);
+			 spielRepository.save(spiel);
+		 
+		 
+		 
+		
+	}
 }

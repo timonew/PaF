@@ -17,14 +17,31 @@ public class MapLayer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "map_continent", nullable = false) // Optional: Datenbankspaltenname explizit setzen
+    @Column(name = "map_continent", nullable = false) 
     private String mapContinent;
+    
+    @Column(name = "map_coordinates", nullable = false) 
+    private String mapCoordinates;
+    
+    @Column(name = "map_zoom", nullable = false) 
+    private int mapZoom;
 
-    @Column(name = "map_difficulty_level", nullable = false)
-    private int mapDifficultyLevel;
 
-    @Column(name = "layer_path", nullable = false)
-    private String layerPath;
+	public String getMapCoordinates() {
+		return mapCoordinates;
+	}
+
+	public void setMapCoordinates(String mapCoordinates) {
+		this.mapCoordinates = mapCoordinates;
+	}
+
+	public int getMapZoom() {
+		return mapZoom;
+	}
+
+	public void setMapZoom(int mapZoom) {
+		this.mapZoom = mapZoom;
+	}
 
 	public Long getId() {
 		return id;
@@ -42,20 +59,6 @@ public class MapLayer {
 		this.mapContinent = mapContinent;
 	}
 
-	public int getMapDifficultyLevel() {
-		return mapDifficultyLevel;
-	}
 
-	public void setMapDifficultyLevel(int mapDifficultyLevel) {
-		this.mapDifficultyLevel = mapDifficultyLevel;
-	}
-
-	public void setLayerPath(String layerPath) {
-		this.layerPath = layerPath;
-	}
-
-	public String getLayerPath() {
-		return layerPath;
-	}
 
 }

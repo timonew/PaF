@@ -1,12 +1,9 @@
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller;
 
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SimpleGameDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameAnswerDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameRequestDTO;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GuessBroadcastDTO;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.GameInitDTO;
-
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 

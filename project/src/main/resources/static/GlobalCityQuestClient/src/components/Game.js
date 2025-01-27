@@ -247,6 +247,22 @@ useEffect(() => {
     }
   };
 
+  //Highscores;Gewinner ermitteln und eintragen
+    const submitHighscore = async (winnerId) => {
+        const payload = {
+          gameId: +gameId,
+          winnerId: +winnerId
+        };
+      console.log("Payload:", payload);
+      try {
+      await axios.post("http://localhost:8080/rest/game/end", payload, {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+      });
+      } catch (error) {
+        console.error("Fehler beim Abschließen des Games:", error);
+      }
+    };
+
   // Spielzug-Daten aktualisieren
     const updateSpielzug = (newGuess) => {
       setSpielzuege((prevSpielzuege) =>
@@ -304,9 +320,9 @@ const startTimer = (duration, callback) => {
 
 // Funktion zum Starten der Spielzüge
   const starteSpielzuege = () => {
-    const vorbereitungsZeit = 5; // 5 Sekunden initiale Vorbereitung
-    const pausenZeit = 8; // 8 Sekunden Vorbereitung zwischen Spielzügen
-    const spielZeit = 20; // 20 Sekunden Spielzeit pro Spielzug
+    const vorbereitungsZeit = 3; // 5 Sekunden initiale Vorbereitung
+    const pausenZeit = 5; // 8 Sekunden Vorbereitung zwischen Spielzügen
+    const spielZeit = 5; // 20 Sekunden Spielzeit pro Spielzug
 
 
     const initialPreparation = () => {startTimer(vorbereitungsZeit,() =>
@@ -340,14 +356,16 @@ const startTimer = (duration, callback) => {
 const endGame = () => {
   const currentScorePl1 = totalScorePl1.current;
   const currentScorePl2 = totalScorePl2.current;
+  let winnerId = 0;
 
-  console.log(currentScorePl1, currentScorePl2);
 
   if (currentScorePl1 > currentScorePl2) {
+    winnerId = gameDetails.spieler1Id;
     setEndGameMessage(
       `Spielende erreicht! ${gameDetails.spieler1Name} hat gewonnen mit ${currentScorePl1} Punkten. Zurück zur Lobby in 5 Sekunden.`
     );
   } else if (currentScorePl1 < currentScorePl2) {
+    winnerId = gameDetails.spieler2Id;
     setEndGameMessage(
       `Spielende erreicht! ${gameDetails.spieler2Name} hat gewonnen mit ${currentScorePl2} Punkten. Zurück zur Lobby in 5 Sekunden.`
     );
@@ -356,7 +374,7 @@ const endGame = () => {
       `Spielende erreicht! Unentschieden mit ${currentScorePl1} Punkten. Zurück zur Lobby in 7 Sekunden.`
     );
   }
-
+  submitHighscore(winnerId);
   setCountdown(7);
 };
 
@@ -388,15 +406,17 @@ const endGame = () => {
   // Karte initialisieren
   const initMap = () => {
     if (!map && mapRef.current) {
-      const mapInstance = L.map(mapRef.current).setView([51.505, -0.09], 5);
+      const [strLat, strLng] = gameDetails.mapCoordinates.split(",");
+      const lat = parseFloat(strLat);
+      const lng = parseFloat(strLng);
+      const mapInstance = L.map(mapRef.current).setView([lat, lng], gameDetails.zoomLevel);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       }).addTo(mapInstance);
       setMap(mapInstance);
 
        // initialen Marker setzen
-       const lat = 52.51497377167247
-       const lng = 9.265730853751185
+
         currentMarker.current = L.marker([lat, lng])
           .addTo(mapInstance)
           .bindPopup(`Klicke die Karte!`)
