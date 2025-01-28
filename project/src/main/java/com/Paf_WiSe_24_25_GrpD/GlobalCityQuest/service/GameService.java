@@ -2,10 +2,13 @@ package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service;
 
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller.WebSocketController;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.*;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Highscore;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.MapLayer;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spiel;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Stadt;
+import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.HighscoreRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.MapLayerRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
@@ -25,6 +28,9 @@ import java.util.stream.Collectors;
 @Service
 public class GameService {
 	
+	@Autowired
+	 private MapLayerRepository maplayerRepository;
+	
 	 @Autowired
 	 private StadtRepository stadtRepository;
 
@@ -38,12 +44,9 @@ public class GameService {
     private SpielzugRepository spielzugRepository;
 
     @Autowired
-    private WebSocketController webSocketController; // 
-    /**
-     * Spieler tritt einem bestehenden Spiel bei.
-     * @param gameId ID des Spiels.
-     * @param username Benutzername des Spielers.
-     */
+    private WebSocketController webSocketController; 
+
+    
     public void joinGame(Long gameId, String username) {
         Spiel spiel = spielRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
@@ -254,6 +257,7 @@ public class GameService {
         Spieler spieler1 = spiel.getSpieler1();
         Spieler spieler2 = spiel.getSpieler2();
         
+        MapLayer mapLayer = maplayerRepository.findByMapContinent(spiel.getContinent());
         
 
         // 4. DTO erstellen
@@ -266,6 +270,8 @@ public class GameService {
         dto.setStatus(spiel.getStatus());
         dto.setContinent(spiel.getContinent());
         dto.setDifficultyLevel(spiel.getDifficultyLevel());
+        dto.setMapCoordinates(mapLayer.getMapCoordinates());
+        dto.setZoomLevel(mapLayer.getMapZoom());
 
         // Falls keine Spielzüge vorhanden sind, könnte dies ein Hinweis auf ein Problem sein
         if (spielzüge.isEmpty()) {
@@ -339,13 +345,6 @@ public class GameService {
         webSocketController.broadcastGuess(gameId, broadcastDTO);
        
     }
-
-	/*
-	 * // Methode zur Berechnung des Gesamtscores private long
-	 * calculateTotalScoreForPlayer(List<Spielzug> moves, boolean isPlayer1) {
-	 * return moves.stream() .mapToLong(move -> isPlayer1 ? move.getScoreSpieler1()
-	 * : move.getScoreSpieler2()) .sum(); }
-	 */
 
 
 }

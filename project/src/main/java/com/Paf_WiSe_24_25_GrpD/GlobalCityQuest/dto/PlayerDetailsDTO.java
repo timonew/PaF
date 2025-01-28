@@ -8,7 +8,8 @@ import java.util.List;
 public class PlayerDetailsDTO {
 	private Long userID;
     private String username;
-    private int gamesPlayed; // Gesamtzahl der Spiele
+    private int gamesPlayed; 
+    private int gamesWon;// 
     private List<HighscoreDTO> highscores; // Liste der Highscores des Benutzers
 
 	public String getUsername() {
@@ -34,5 +35,11 @@ public class PlayerDetailsDTO {
 	}
 	public void setUserID(Long userID) {
 		this.userID = userID;
+	}
+	public int getGamesWon() {
+		return gamesWon;
+	}
+	public void setGamesWon(int gamesWon) {
+		this.gamesWon = gamesWon;
 	}
 }

@@ -15,6 +15,8 @@ public class GameInitDTO {
     private String status;
     private String continent;
     private List<SpielzugDTO> spielzuege;
+    private String mapCoordinates;
+    private int zoomLevel;
 
     // Getter und Setter
     public Long getGameId() {
@@ -87,6 +89,22 @@ public class GameInitDTO {
 
 	public void setSpieler2Name(String spieler2Name) {
 		this.spieler2Name = spieler2Name;
+	}
+
+	public String getMapCoordinates() {
+		return mapCoordinates;
+	}
+
+	public void setMapCoordinates(String mapCoordinates) {
+		this.mapCoordinates = mapCoordinates;
+	}
+
+	public int getZoomLevel() {
+		return zoomLevel;
+	}
+
+	public void setZoomLevel(int zoomLevel) {
+		this.zoomLevel = zoomLevel;
 	}
 
 

@@ -15,17 +15,11 @@ public class Spieler {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
     @Column(name = "user_name", nullable = false, unique = true)
     private String userName;
 
     @Column(name = "password", nullable = false)
     private String password;
-
-    @Column(name = "current_score", nullable = false)
-    private long currentscore;
 
     // Ein Spieler kann mehrere Spiele als Spieler1 haben
     @OneToMany(mappedBy = "spieler1", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -49,14 +43,6 @@ public class Spieler {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getUserName() {
         return userName;
     }
@@ -72,14 +58,6 @@ public class Spieler {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public long getCurrentscore() {
-        return currentscore;
-    }
-
-    public void setCurrentscore(long currentscore) {
-        this.currentscore = currentscore;
     }
 
     public Set<Spiel> getSpiele1() {
@@ -120,6 +98,7 @@ public class Spieler {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
 
 
 

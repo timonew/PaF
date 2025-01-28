@@ -27,13 +27,14 @@ public class Spiel {
     @ManyToOne
     @JoinColumn(name = "spieler2_id", nullable = true)
     private Spieler spieler2;
+    
+    @ManyToOne
+    @JoinColumn(name = "winner_id", nullable = true)
+    private Spieler winner;
 
-    @OneToMany(mappedBy = "spiel", cascade = CascadeType.ALL, orphanRemoval = true)
+
+	@OneToMany(mappedBy = "spiel", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Spielzug> spielzug;
-
-    @OneToMany
-    @JoinColumn(name = "map_layer_id")
-    private Set<MapLayer> mapLayer;
 
     // Getter und Setter
     public Long getId() {
@@ -91,14 +92,14 @@ public class Spiel {
     public void setSpielzug(Set<Spielzug> spielzug) {
         this.spielzug = spielzug;
     }
+    
+    public Spieler getWinner() {
+		return winner;
+	}
 
-    public Set<MapLayer> getMapLayer() {
-        return mapLayer;
-    }
-
-    public void setMapLayer(Set<MapLayer> mapLayer) {
-        this.mapLayer = mapLayer;
-    }
+	public void setWinner(Spieler winner) {
+		this.winner = winner;
+	}
 
     // Status-Hilfsmethoden
     public boolean isWaiting() {
