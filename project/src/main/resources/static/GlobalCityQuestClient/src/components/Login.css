@@ -3,11 +3,15 @@
 }
 
 body {
-    background-color: #212121;
-    //background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(52,9,121,1) 37%, rgba(0,212,255,1) 94%);
+    background: url("./images/hintergrund.JPEG") center top fixed;
+    background-color: #191A1C;
+    background-size: 2560px 1440px;
+    background-repeat: repeat, repeat, repeat;
     color: #fff;
     font-family: monospace, serif;
     letter-spacing: 0.05em;
+    min-height: 100vh;
+    ;
 }
 
 h1 {

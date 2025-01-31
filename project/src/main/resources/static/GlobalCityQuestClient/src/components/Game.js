@@ -322,7 +322,7 @@ const startTimer = (duration, callback) => {
   const starteSpielzuege = () => {
     const vorbereitungsZeit = 3; // 5 Sekunden initiale Vorbereitung
     const pausenZeit = 5; // 8 Sekunden Vorbereitung zwischen Spielzügen
-    const spielZeit = 5; // 20 Sekunden Spielzeit pro Spielzug
+    const spielZeit = 20; // 20 Sekunden Spielzeit pro Spielzug
 
 
     const initialPreparation = () => {startTimer(vorbereitungsZeit,() =>
@@ -442,57 +442,68 @@ const endGame = () => {
     <div>
       <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1.current} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2.current} </strong></p>
 
-       <table>
-        <thead>
+
+      {endGameMessage && (
+          <div style={{marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0"}}>
+            <p>{endGameMessage}</p>
+            {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+          </div>
+      )}
+
+      <h4>Timer: {gameModus ===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h4>
+      {gameModus===1 && (
+          <div style={{position: 'relative', width: '100%', height: '100%'}}>
+            <p><strong>gesuchte Stadt: {spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
+          </div>
+      )}
+
+      <div style={{display: "flex", justifyContent: "space-between", gap: "20px"}}>
+        <div ref={mapRef} style={{
+
+          width: "50%",
+          height: "550px",
+          minHeight: "550px",
+          margin: "20px auto",
+          marginLeft: "0px",
+          borderRadius: "0%",
+          overflow: "hidden",
+          border: "2px solid #ccc",
+          display: "flex",
+          flex: "2",
+        }}></div>
+
+        <table style={{width: "40%", height: "600px", display: "block", maxWidth: "100%", overflowX: "auto", overflowY: "auto"}}>
+          <thead>
           <tr>
             <th>Spielzug</th>
             <th>Stadt</th>
-            <th>Koordinaten</th>
             <th>Guess {gameDetails.spieler1Name}</th>
             <th>Guess {gameDetails.spieler2Name}</th>
             <th>Score {gameDetails.spieler1Name}</th>
             <th>Score {gameDetails.spieler2Name}</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           {spielzuege
-           .filter((_, index) => index < currentSpielzugIndex)
-           .map((spielzug, index) => (
-            <tr key={spielzug.spielZugId}>
-              <td>{index + 1}</td> {/* Nummer basierend auf dem Index der Map */}
-                <td>{spielzug.stadtName}</td>
-                <td>{spielzug.koordinaten}</td>
-                <td>{spielzug.guessSpieler1 || "-"}</td>
-                <td>{spielzug.guessSpieler2 || "-"}</td>
-                <td>{spielzug.scoreSpieler1 || "-"}</td>
-                <td>{spielzug.scoreSpieler2 || "-"}</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+              .filter((_, index) => index < currentSpielzugIndex)
+              .map((spielzug, index) => (
+                  <tr key={spielzug.spielZugId}>
+                    <td>{index + 1}</td>
+                    {/* Nummer basierend auf dem Index der Map */}
+                    <td>{spielzug.stadtName}</td>
+                    <td>{spielzug.guessSpieler1 || "-"}</td>
+                    <td>{spielzug.guessSpieler2 || "-"}</td>
+                    <td>{spielzug.scoreSpieler1 || "-"}</td>
+                    <td>{spielzug.scoreSpieler2 || "-"}</td>
+                  </tr>
+              ))}
+          </tbody>
+        </table>
 
-      {endGameMessage && (
-        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0" }}>
-          <p>{endGameMessage}</p>
-          {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
-        </div>
-      )}
+      </div>
 
-      <h4>Timer: {gameModus===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h4>
-      {gameModus===1 && (
-        <div>
-          <p><strong>gesuchte Stadt:{spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
-        </div>
-      )}
 
-      <div ref={mapRef} style={{
-        width: "800px",
-        height: "800px",
-        margin: "20px auto",
-        borderRadius: "50%",
-        overflow: "hidden",
-        border: "2px solid #ccc",
-      }}></div>
+
 
     </div>
   );

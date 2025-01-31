@@ -251,8 +251,8 @@ const Lobby = () => {
                 <h5>Schlage ein Spiel vor oder wähle ein vorhandenes aus!</h5>
                 <label>Schwierigkeitsgrad:</label>
                 <div className="control block-cube block-input">
-                    <div>
-                        <select className="" value={difficulty}
+                    <div className="">
+                        <select className="dropdown" value={difficulty}
                                 onChange={(e) => setDifficulty(parseInt(e.target.value, 10))}>
                             <option value={1}>1 - Einfach</option>
                             <option value={2}>2 - Mittel</option>
@@ -273,7 +273,7 @@ const Lobby = () => {
                 <div>
                     <label>Kontinent:</label>
                     <div className="control block-cube block-input">
-                        <select className="" value={continent} onChange={(e) => setContinent(e.target.value)}>
+                        <select className="dropdown" value={continent} onChange={(e) => setContinent(e.target.value)}>
                             <option value="Europe">Europa</option>
                             <option value="Asia">Asien</option>
                         </select>
@@ -303,9 +303,10 @@ const Lobby = () => {
                 </button>
 
                 <h2>Wartende Spiele</h2>
+
                 {waitingGames.length > 0 ? (
                     <table>
-                        <thead>
+                        <thead style={{width: "100px"}}>
                         <tr>
                             <th>Spieler 1</th>
                             <th>Kontinent</th>
@@ -313,7 +314,7 @@ const Lobby = () => {
                             <th>Aktion</th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody style={{width: "100px"}}>
                         {waitingGames.map((game) => (
                             <tr key={game.id}>
                                 <td>{game.spieler1Name}</td>
@@ -321,7 +322,7 @@ const Lobby = () => {
                                 <td>{game.difficultyLevel}</td>
                                 <td>
                                     {game.spieler1Name === userDetails.username ? (
-                                        <button onClick={() => stopGame(game.id)}>Vorschlag zurücknehmen</button>
+                                        <button onClick={() => stopGame(game.id)}>Spiel abbrechen</button>
                                     ) : (
                                         <button onClick={() => joinRequest(game.id, game.spieler1ID)}>Spiel
                                             beitreten</button>
@@ -331,6 +332,7 @@ const Lobby = () => {
                         ))}
                         </tbody>
                     </table>
+
                 ) : (
                     <p>Keine wartenden Spiele verfügbar.</p>
                 )}
@@ -341,18 +343,55 @@ const Lobby = () => {
         {gameRequest ? (
           <div>
             <p>{gameRequest.requestingPlayer} möchte mit dir spielen!</p>
-            <button onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestAccepted")}>Anfrage annehmen</button>
-            <button onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestDeclined")}>Anfrage ablehnen</button>
+              <button type="submit" className="btn block-cube block-cube-hover" style={{marginRight: 25}}
+                      onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestAccepted")}>
+                  <div className="bg-top">
+                      <div className="bg-inner"></div>
+                  </div>
+                  <div className="bg-right">
+                      <div className="bg-inner"></div>
+                  </div>
+                  <div className="bg">
+                      <div className="bg-inner"></div>
+                  </div>
+                  <div className="text">Anfrage annehmen</div>
+              </button>
+              <button type="submit" className="btn block-cube-cancel block-cube-hover"
+                      onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestDeclined")}>
+                  <div className="bg-top">
+                      <div className="bg-inner"></div>
+                  </div>
+                  <div className="bg-right">
+                      <div className="bg-inner"></div>
+                  </div>
+                  <div className="bg">
+                      <div className="bg-inner"></div>
+                  </div>
+                  <div className="text">Anfrage ablehnen</div>
+              </button>
           </div>
         ) : null}
 
         {message && (
-          <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0" }}>
-            <p>{message}</p>
-            {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
-          </div>
+            <div className="control block-cube block-input"
+                 style={{marginTop: "20px", padding: "10px", border: "1px solid #ccc"}}>
+                <div className="bg-top">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg-right">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="text"><p>{message}</p>
+
+                    {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+                </div>
+
+            </div>
         )}
-      </div>
+    </div>
     </form>
   );
 };
