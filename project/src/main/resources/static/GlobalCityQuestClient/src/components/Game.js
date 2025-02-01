@@ -6,6 +6,8 @@ import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import L from "leaflet"; // Leaflet importieren
 import "./custom.css";
+import backgroundImage from "./images/hintergrund_game.JPEG";
+
 
 // Hilfsfunktionen
 // Haversine-Formel für Entfernung
@@ -439,21 +441,83 @@ const endGame = () => {
   }
 
   return (
+  <body style={{ backgroundImage:`url(${backgroundImage})`}}>
     <div>
-      <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1.current} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2.current} </strong></p>
+      <div className="control block-cube block-input"
+           style={{padding: "10px", border: "1px solid #ccc"}}>
+        <div className="bg-top">
+          <div className="bg-inner"></div>
+        </div>
+        <div className="bg-right">
+          <div className="bg-inner"></div>
+        </div>
+        <div className="bg">
+          <div className="bg-inner"></div>
+        </div>
+        <div className="text"><p>
+          <h2>Score</h2>
+          <strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1.current} </strong> |
+          <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2.current} </strong>
+        </p>
+        </div>
+      </div>
 
 
       {endGameMessage && (
-          <div style={{marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0"}}>
-            <p>{endGameMessage}</p>
-            {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+          <div
+              className="control block-cube block-input"
+              style={{
+                position: "fixed", // Überlagert alles auf dem Bildschirm
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)", // Exakte Zentrierung
+                width: "50%", // Anpassbare Breite
+                maxWidth: "500px", // Begrenzung, damit es nicht zu groß wird
+                padding: "20px",
+                backgroundColor: "rgba(0, 0, 0, 0.8)", // Halbtransparenter Hintergrund
+                color: "white", // Weißer Text
+                fontSize: "25px",
+                fontFamily: "Comic Sans MS",
+                border: "2px solid #ccc",
+                textAlign: "center",
+                zIndex: 9999, // Stellt sicher, dass es über allem anderen liegt
+                boxShadow: "0px 0px 35px rgba(0,212,255,0.7)", // Weicher Glow-Effekt
+                borderRadius: "10px",
+              }}
+          >
+            <div className="bg-top">
+              <div className="bg-inner"></div>
+            </div>
+            <div className="bg-right">
+              <div className="bg-inner"></div>
+            </div>
+            <div className="bg">
+              <div className="bg-inner"></div>
+            </div>
+            <div className="text"><p>{endGameMessage}</p>
+
+              {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+            </div>
           </div>
       )}
 
-      <h4>Timer: {gameModus ===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h4>
-      {gameModus===1 && (
-          <div style={{position: 'relative', width: '100%', height: '100%'}}>
-            <p><strong>gesuchte Stadt: {spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
+      <div style={{
+        position: "absolute",
+        top: "10px", // Abstand zum oberen Rand
+        left: "50%",
+        transform: "translateX(-50%)", // Zentriert den Timer
+        backgroundColor: "#212121", // Halbtransparenter Hintergrund
+        color: "white",
+        padding: "8px 16px",
+        borderRadius: "0px",
+        fontSize: "18px",
+        fontWeight: "bold",
+      }}>
+        <h4>{gameModus === 2 || gameModus === 0 ? "Mach dich bereit: " : "Du hast noch "} {timer} Sekunden</h4>
+      </div>
+      {gameModus === 1 && (
+          <div style={{position: 'absolute', left: "50%", top: "80px", transform: "translateX(-50%)"}}>
+            <p><strong><h3>Die gesuchte Stadt ist {spielzuege[currentSpielzugIndex]?.stadtName}</h3></strong></p>
           </div>
       )}
 
@@ -461,18 +525,25 @@ const endGame = () => {
         <div ref={mapRef} style={{
 
           width: "50%",
-          height: "550px",
-          minHeight: "550px",
-          margin: "20px auto",
-          marginLeft: "0px",
+          height: "70vh",
+          margin: "20px",
+          marginLeft: "20px",
           borderRadius: "0%",
           overflow: "hidden",
           border: "2px solid #ccc",
           display: "flex",
           flex: "2",
+
         }}></div>
 
-        <table style={{width: "40%", height: "600px", display: "block", maxWidth: "100%", overflowX: "auto", overflowY: "auto"}}>
+        <table style={{
+          width: "40%",
+          height: "auto",
+          display: "block",
+          maxWidth: "100%",
+          overflowX: "auto",
+          overflowY: "auto"
+        }}>
           <thead>
           <tr>
             <th>Spielzug</th>
@@ -484,28 +555,32 @@ const endGame = () => {
           </tr>
           </thead>
           <tbody>
-          {spielzuege
-              .filter((_, index) => index < currentSpielzugIndex)
-              .map((spielzug, index) => (
-                  <tr key={spielzug.spielZugId}>
-                    <td>{index + 1}</td>
-                    {/* Nummer basierend auf dem Index der Map */}
-                    <td>{spielzug.stadtName}</td>
-                    <td>{spielzug.guessSpieler1 || "-"}</td>
-                    <td>{spielzug.guessSpieler2 || "-"}</td>
-                    <td>{spielzug.scoreSpieler1 || "-"}</td>
-                    <td>{spielzug.scoreSpieler2 || "-"}</td>
-                  </tr>
-              ))}
+          {[...Array(10)].map((_, index) => {
+            const spielzug = spielzuege[index]; // Hole den echten Spielzug, falls vorhanden
+            const rundeGespielt = index < currentSpielzugIndex;
+
+            return (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  {/* Runde Nummer */}
+                  <td>{rundeGespielt ? spielzug?.stadtName || "-" : "-"}</td>
+                  {/* Stadt erst anzeigen, wenn Runde gespielt wurde */}
+                  <td>{spielzug?.guessSpieler1 || "-"}</td>
+                  <td>{spielzug?.guessSpieler2 || "-"}</td>
+                  <td>{spielzug?.scoreSpieler1 || "-"}</td>
+                  <td>{spielzug?.scoreSpieler2 || "-"}</td>
+                </tr>
+            );
+          })}
           </tbody>
         </table>
 
       </div>
 
 
-
-
     </div>
+  </body>
+
   );
 };
 

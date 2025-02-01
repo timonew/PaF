@@ -12,7 +12,7 @@ const Root = () => {
                 <p>Bitte wählen Sie eine der folgenden Optionen:</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
                     <Link to="/login">
-                        <button type="submit" className="btn block-cube block-cube-hover">
+                        <button className="btn block-cube block-cube-hover">
                             <div className="bg-top">
                                 <div className="bg-inner"></div>
                             </div>
@@ -26,7 +26,7 @@ const Root = () => {
                         </button>
                     </Link>
                     <Link to="/register">
-                        <button type="submit" className="btn block-cube block-cube-hover">
+                        <button className="btn block-cube block-cube-hover">
 
                             <div className="bg-top">
                                 <div className="bg-inner"></div>

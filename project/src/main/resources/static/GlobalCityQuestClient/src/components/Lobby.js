@@ -195,7 +195,7 @@ const Lobby = () => {
   }
 
   return (
-    <form className="lobbyinterface">
+    <div className="lobbyinterface">
         <div>
             <button
                 onClick={handleLogout} className="btn block-cube block-cube-hover" style={{position: 'absolute', top: 0, right: 0, margin: '25px'}} >
@@ -288,7 +288,7 @@ const Lobby = () => {
                         </div>
                     </div>
                 </div>
-                <button onClick={startGame} type="submit" className="btn block-cube block-cube-hover"  style={{position: 'relative', width: '100%', height: '100%'}} >
+                <button onClick={startGame} className="btn block-cube block-cube-hover"  style={{position: 'relative', width: '100%', height: '100%'}} >
                     <div className="bg-top">
                         <div className="bg-inner"></div>
                     </div>
@@ -343,7 +343,7 @@ const Lobby = () => {
         {gameRequest ? (
           <div>
             <p>{gameRequest.requestingPlayer} möchte mit dir spielen!</p>
-              <button type="submit" className="btn block-cube block-cube-hover" style={{marginRight: 25}}
+              <button className="btn block-cube block-cube-hover" style={{marginRight: 25}}
                       onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestAccepted")}>
                   <div className="bg-top">
                       <div className="bg-inner"></div>
@@ -356,7 +356,7 @@ const Lobby = () => {
                   </div>
                   <div className="text">Anfrage annehmen</div>
               </button>
-              <button type="submit" className="btn block-cube-cancel block-cube-hover"
+              <button className="btn block-cube-cancel block-cube-hover"
                       onClick={() => requestAnswer(gameRequest.gameId, gameRequest.requestingPlayer, "requestDeclined")}>
                   <div className="bg-top">
                       <div className="bg-inner"></div>
@@ -392,7 +392,7 @@ const Lobby = () => {
             </div>
         )}
     </div>
-    </form>
+    </div>
   );
 };
 

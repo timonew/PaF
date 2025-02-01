@@ -78,7 +78,7 @@ function Login() {
                     <div className="bg-inner"></div>
                 </div>
             </div>
-            <button type="submit" className="btn block-cube block-cube-hover">
+            <button className="btn block-cube block-cube-hover">
                 <div className="bg-top">
                     <div className="bg-inner"></div>
                 </div>

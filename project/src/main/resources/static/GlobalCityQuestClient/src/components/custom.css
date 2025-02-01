@@ -60,7 +60,7 @@ h3 {
   display: flex;
   flex-direction: column;
   position: relative;
-  margin-bottom: 24px;
+  margin: 25px;
 }
 .control input {
   width: 270px;
