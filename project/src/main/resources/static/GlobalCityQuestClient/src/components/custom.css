@@ -1,3 +1,7 @@
+body{
+  font-family: monospace, sans-serif;
+}
+
 .form {
   width: 300px;
   padding: 64px 15px 24px;
@@ -13,7 +17,7 @@
 table {
   border-collapse: collapse;
   width: 300px;
-  font-family: Arial, sans-serif;
+  font-family: monospace, serif;
   font-size: 12px;
   table-layout: auto;
   line-height: 1.2;
@@ -50,11 +54,9 @@ h1 {
 }
 h2{
   font-size: 25px;
-  font-family: "Comic Sans MS";
 }
 h3 {
   font-size: 30px;
-  font-family: "Comic Sans MS";
 }
 .control {
   display: flex;
@@ -69,7 +71,6 @@ h3 {
   border: 0;
   background: transparent;
   color: #fff;
-  font-family: monospace, serif;
   letter-spacing: 0.05em;
   font-size: 16px;
 }
@@ -90,7 +91,6 @@ h3 {
   color: #fff;
   letter-spacing: 0.1em;
   font-weight: bold;
-  font-family: monospace;
   font-size: 16px;
 }
 .block-cube {
@@ -278,7 +278,6 @@ h3 {
   padding: 14px 16px;
   background: transparent;
   border: none;
-  font-family: monospace, serif;
   font-size: 16px;
   appearance: none;
   outline: none;
@@ -315,7 +314,6 @@ h3 {
     border: none;
     background: transparent;
     color: white;
-    font-family: monospace, serif;
     font-size: 16px;
     appearance: none; /* Entfernt Standard-Pfeile von Dropdowns */
     -webkit-appearance: none;
@@ -352,7 +350,6 @@ h3 {
 table {
   width: 750px;
   border-collapse: collapse;
-  font-family: monospace, serif;
   font-size: 16px;
   color: white;
   background: transparent;
@@ -398,7 +395,6 @@ table button {
   background: transparent;
   color: white;
   border: none;
-  font-family: monospace, serif;
   font-size: 16px;
   cursor: pointer;
   transition: background 0.3s ease-in-out;

@@ -50,9 +50,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Registriert einen neuen Benutzer, verschlüsselt das Passwort und speichert ihn in der Datenbank.
-     *
-     * @param spieler Der Spieler, der registriert werden soll
-     * @return Status der Registrierung
      */
     public RegistrationStatus registerUser(Spieler spieler) {
         if (isUserExists(spieler.getUserName())) {
@@ -71,8 +68,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Speichert einen Benutzer in der Datenbank.
-     *
-     * @param spieler Der Spieler, der gespeichert werden soll
      */
     private void saveUser(Spieler spieler) {
         spielerRepository.save(spieler);
@@ -80,10 +75,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Authentifiziert einen Benutzer basierend auf seinem Benutzernamen und Passwort.
-     *
-     * @param userName Der Benutzername
-     * @param password Das Passwort des Benutzers
-     * @return Status der Authentifizierung
      */
     public AuthStatus authenticate(String userName, String password) {
         Spieler spieler = findUserByUsername(userName);
@@ -105,10 +96,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Lädt die Benutzerinformationen für den angegebenen Benutzernamen.
-     *
-     * @param userName Der Benutzername des Benutzers
-     * @return Benutzerdetails
-     * @throws UsernameNotFoundException Wenn der Benutzer nicht gefunden wird
      */
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
@@ -126,9 +113,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Überprüft, ob der Benutzername bereits existiert.
-     *
-     * @param userName Der Benutzername
-     * @return true, wenn der Benutzername existiert, andernfalls false
      */
     private boolean isUserExists(String userName) {
         return spielerRepository.findByUserName(userName).isPresent();
@@ -136,9 +120,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Validiert die Benutzerinformationen.
-     *
-     * @param spieler Der Spieler, der validiert werden soll
-     * @return true, wenn die Daten gültig sind, andernfalls false
      */
     private boolean isValid(Spieler spieler) {
         // Validierung der Benutzerinformationen
@@ -148,9 +129,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Findet einen Benutzer anhand seines Benutzernamens.
-     *
-     * @param userName Der Benutzername des gesuchten Spielers
-     * @return Der gefundene Spieler oder null, wenn nicht gefunden
      */
     private Spieler findUserByUsername(String userName) {
         Optional<Spieler> spielerOpt = spielerRepository.findByUserName(userName);
@@ -159,9 +137,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Gibt die ID des Spielers anhand seines Benutzernamens zurück.
-     *
-     * @param userName Der Benutzername des Spielers
-     * @return Die ID des Spielers
      */
     public Long getIdByUsername(String userName) {
         Optional<Spieler> spielerOpt = spielerRepository.findByUserName(userName);
@@ -171,10 +146,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Gibt die Details eines Spielers anhand seines Benutzernamens zurück.
-     *
-     * @param username Der Benutzername des Spielers
-     * @return Die Details des Spielers
-     * @throws RuntimeException Wenn der Spieler nicht gefunden wird
      */
     public PlayerDetailsDTO getPlayerDetailsByUsername(String username) {
         Optional<Spieler> spielerOptional = spielerRepository.findByUserName(username);
@@ -207,9 +178,6 @@ public class UserService implements UserDetailsService {
 
     /**
      * Speichert den Gewinner eines Spiels.
-     *
-     * @param gameId   Die ID des Spiels
-     * @param winnerId Die ID des Gewinners
      */
     public void saveWinner(Long gameId, Long winnerId) {
         Spiel spiel = spielRepository.findById(gameId)

@@ -50,12 +50,10 @@ public class GameService {
     @Autowired
     private WebSocketController webSocketController; 
 
+    
     /**
      * Holt den Status eines Spiels.
-     * @param gameId ID des Spiels.
-     * @param username spieler, der beitreten möchte.
      */
-    
     public void joinGame(Long gameId, String username) {
         Spiel spiel = spielRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
@@ -71,13 +69,12 @@ public class GameService {
         spiel.setStatus("in_process");
         spielRepository.save(spiel);
 
-           // Aktualisierte Liste der wartenden Spiele broadcasten
+         // Aktualisierte Liste der wartenden Spiele broadcasten
         getWaitingGames();
     }
 
     /**
      * Holt den Status eines Spiels.
-     * @param gameId ID des Spiels.
      */
     public String getGameStatus(Long gameId) {
         Optional<Spiel> optionalSpiel = spielRepository.findById(gameId);
@@ -86,8 +83,7 @@ public class GameService {
     }
 
     /**
-     * Aktualisiert den Status eines Spiels.
-     * @param updateGameStatusDTO Daten zur Aktualisierung des Spielstatus.
+     * Aktualisiert den Status eines Spiels. z.B. wenn ein vorbereitetes Spiel entfernt wird 
      */
     public void setGameStatus(UpdateGameStatusDTO updateGameStatusDTO) {
         if (updateGameStatusDTO == null || updateGameStatusDTO.getGameId() == null || updateGameStatusDTO.getNewStatus() == null) {
@@ -107,6 +103,9 @@ public class GameService {
         getWaitingGames();
     }
 
+    /**
+     * Bereitet ein Spiel für die Liste der wartenden Spiele vor 
+     */
     public SimpleGameDTO startGame(GameStartDTO gameStartDTO, String username) {
         Spieler spieler1 = spielerRepository.findByUserName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Spieler nicht gefunden: " + username));
@@ -133,6 +132,9 @@ public class GameService {
 
     }
 
+    /**
+     * holt die Spiele mit Status "waiting" aus dem Repository 
+     */
     public List<SimpleGameDTO> getWaitingGames() {
         List<Spiel> waitingGames = spielRepository.findByStatus("waiting");
         List<SimpleGameDTO> waitingGamesDTO = waitingGames.stream()
@@ -155,9 +157,7 @@ public class GameService {
 
     
     /**
-     * Spieler 2 sendet eine Anfrage an Spieler 1.
-     * @param gameId ID des Spiels.
-     * @param requestingPlayer Benutzername des anfragenden Spielers (Spieler 2).
+     * Spieler 2 sendet eine Anfrage an Spieler 1 anhand eine vorbereiteten Spiels
      */
     public GameRequestDTO sendGameRequest(Long gameId, String requestingPlayer) {
         // Spiel und Spieler laden
@@ -180,6 +180,9 @@ public class GameService {
         return requestDTO;
     }
 
+    /**
+     * Spielanfrage wird akzeptiert; Status wird geändert und die ID von Spieler2 eingetragen
+     */
     @Transactional
     public void acceptGameRequest(Long gameId, String player2Name) {
         // 1. Spiel finden
@@ -198,6 +201,9 @@ public class GameService {
         spielRepository.save(spiel);
     }
 
+    /**
+     * das Spiel wird initiiert
+     */
     @Transactional
     public void gameInit(Long gameId) {
         System.out.println("gameInit called with gameId: " + gameId);
@@ -248,6 +254,9 @@ public class GameService {
 
     }
 
+    /**
+     * das DTO zur Spielinitiierung wird erzeugt
+     */
     public GameInitDTO getgameInitDTO(Long gameId) {
         System.out.println("called getGameInitDTO: " + gameId); // Log the incoming request
 
@@ -279,7 +288,7 @@ public class GameService {
         dto.setMapCoordinates(mapLayer.getMapCoordinates());
         dto.setZoomLevel(mapLayer.getMapZoom());
 
-        // Falls keine Spielzüge vorhanden sind, könnte dies ein Hinweis auf ein Problem sein
+        
         if (spielzüge.isEmpty()) {
             System.out.println("Keine Spielzüge für das Spiel mit ID " + gameId);
         }
@@ -302,13 +311,14 @@ public class GameService {
             return spielzugDTO;
         }).collect(Collectors.toList()));
 
-        System.out.println("GameInitDTO erstellt: " + dto);
 
         return dto;
     }
     
     
-    
+    /**
+     * ein eingehender Spielzug wird verarbeitet
+     */
     @Transactional
     public void processGuess(Long gameId, Long spielZugId, Long spielZugScore, Long spielerId, boolean spieler1Bool, String spielZugGuessStr) {
         // Spielzug validieren

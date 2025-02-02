@@ -36,8 +36,6 @@ public class HighscoreService {
 
     /**
      * Gibt alle Highscore-Einträge aus der Datenbank zurück.
-     *
-     * @return Eine Liste aller Highscore-Einträge
      */
     public List<Highscore> getAllHighscores() {
         return highscoreRepository.findAll();
@@ -46,8 +44,6 @@ public class HighscoreService {
     /**
      * Berechnet und speichert die Highscores für beide Spieler eines Spiels.
      * Wenn ein Spieler einen neuen Highscore erreicht, wird dieser gespeichert.
-     *
-     * @param gameId Die ID des Spiels, dessen Highscores gespeichert werden sollen
      */
     public void saveHighscore(Long gameId) {
         // Hole das Spiel anhand der Spiel-ID
@@ -111,10 +107,6 @@ public class HighscoreService {
 
     /**
      * Berechnet den Gesamtscore für einen Spieler in einem bestimmten Spiel.
-     *
-     * @param gameId     Die ID des Spiels, dessen Score berechnet werden soll
-     * @param isPlayer1  Ein Flag, das angibt, ob der Score für Spieler 1 oder Spieler 2 berechnet werden soll
-     * @return Der Gesamtscore des Spielers
      */
     private long calculateTotalScoreForPlayer(Long gameId, boolean isPlayer1) {
         List<Spielzug> moves = spielzugRepository.findBySpielId(gameId);

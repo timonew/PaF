@@ -216,7 +216,7 @@ const Lobby = () => {
         {userDetails ? (
             <div>
                 <p>Angemeldeter Benutzer: {userDetails.username} </p>
-                <p> Spiele gespielt / Spiele gewonnen: {userDetails.gamesPlayed} / {userDetails.gamesWon} </p>
+                <p> Spiele gespielt: {userDetails.gamesPlayed} / Spiele gewonnen: {userDetails.gamesWon} </p>
                 <h4>Highscores</h4>
                 {userDetails.highscores && userDetails.highscores.length > 0 ? (
                     <table>

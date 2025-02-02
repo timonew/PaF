@@ -109,7 +109,7 @@ const Game = () => {
         let currentMoveMarker = L.marker([parseFloat(lat), parseFloat(lng)])
           .addTo(map)
           .bindPopup(
-            `Gesuchte Stadt: ${spielzuege[currentSpielzugIndex].stadtName} | Distanz: ${calculatedDistance}`
+            `Gesuchte Stadt: ${spielzuege[currentSpielzugIndex].stadtName} | Distanz: ${calculatedDistance} km`
           )
           .openPopup();
 
@@ -322,9 +322,9 @@ const startTimer = (duration, callback) => {
 
 // Funktion zum Starten der Spielzüge
   const starteSpielzuege = () => {
-    const vorbereitungsZeit = 3; // 5 Sekunden initiale Vorbereitung
-    const pausenZeit = 5; // 8 Sekunden Vorbereitung zwischen Spielzügen
-    const spielZeit = 15; // 20 Sekunden Spielzeit pro Spielzug
+    const vorbereitungsZeit = 3; // Sekunden initiale Vorbereitung
+    const pausenZeit = 5; // Sekunden Vorbereitung zwischen Spielzügen
+    const spielZeit = 10; //  Sekunden Spielzeit pro Spielzug
 
 
     const initialPreparation = () => {startTimer(vorbereitungsZeit,() =>
@@ -377,7 +377,7 @@ const endGame = () => {
     );
   }
   submitHighscore(winnerId);
-  setCountdown(7);
+  setCountdown(10);
 };
 
 

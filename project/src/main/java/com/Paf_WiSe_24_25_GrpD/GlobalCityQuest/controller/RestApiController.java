@@ -39,21 +39,19 @@ public class RestApiController {
     
     @Autowired
     private WebSocketController webSocketController;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private GameService gameService;
+    @Autowired
+    private HighscoreService highscoreService;
 
-    private final UserService userService;
-    private final JwtUtil jwtUtil;
-    private final GameService gameService;
-    private final HighscoreService highscoreService;
-
-    // Konstruktor-Injektion
-    public RestApiController(UserService userService, JwtUtil jwtUtil, GameService gameService,HighscoreService highscoreService) {
-        this.userService = userService;
-        this.jwtUtil = jwtUtil;
-        this.gameService = gameService;
-		this.highscoreService = highscoreService;
-    }
-
-    // Registrierung des Benutzers
+    
+    /**
+     * Registrierung des Benutzers
+     */
     @PostMapping("/user/register")
     public ResponseEntity<RegistrationStatus> registerUser(@RequestBody RegisterRequestDTO registerRequestDTO) {
         try {
@@ -73,7 +71,9 @@ public class RestApiController {
         }
     }
 
-    // Login-Endpoint
+    /**
+     * Login-Endpoint
+     */ 
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO) {
         System.out.println("Login-Anfrage für Benutzer: " + loginRequestDTO.getUserName());
@@ -91,7 +91,10 @@ public class RestApiController {
         }
     }
 
-    // Benutzer-Details
+    
+    /**
+     * Benutzer-Details
+     */
     @GetMapping("/user/details")
     public ResponseEntity<?> getUserDetails(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -107,7 +110,9 @@ public class RestApiController {
         }
     }
 
-    // Start eines Spiels
+    /**
+     * Start der Spielvorbereitung
+     */
     @PostMapping("/game/start")
     public ResponseEntity<SimpleGameDTO> startGame(@RequestBody GameStartDTO gameStartDTO, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -120,7 +125,10 @@ public class RestApiController {
         return ResponseEntity.ok(dto);
     }
     
-    // Ende eines Spiels
+
+    /**
+     * Verarbeitet die Informationnen zum Spielende
+     */
     @PostMapping("/game/end")
     public ResponseEntity<String> endGame(@RequestBody Map<String,Long> requestBody, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -142,7 +150,9 @@ public class RestApiController {
     }
     
     
-    // Spiele anzeigen, die auf Spieler warten
+    /**
+     *gibt eine Liste mit den vorbereiteten Spielen zurück
+     */
     @GetMapping("/game/waiting")
     public ResponseEntity<List<SimpleGameDTO>> getWaitingGames(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -157,6 +167,9 @@ public class RestApiController {
         return ResponseEntity.ok(waitingGames);
     }
 
+    /**
+     * nimmt eine Spielanfrage auf
+     */
     @PostMapping("/game/joinrequest")
     public ResponseEntity<String> joinRequest(@RequestBody Map<String, Long> requestBody, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -179,6 +192,9 @@ public class RestApiController {
         return ResponseEntity.ok("Spielanfrage erfolgreich gesendet");
     }
 
+    /**
+     * nimmt die Antwort auf eine Spielanfrage auf
+     */
     @PostMapping("/game/requestAnswer")
     public ResponseEntity<String> requestAnswer(@RequestBody Map<String, String> requestBody, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -231,6 +247,9 @@ public class RestApiController {
         }
     }
 
+    /**
+     * Löst die Spielinitierung aus
+     */
     @GetMapping("/game/init")
     public ResponseEntity<GameInitDTO> getGameInit(@RequestParam Long gameId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -249,7 +268,9 @@ public class RestApiController {
     
     
     
-    // Update des Spielstatus
+    /**
+     * Ändert den Spielstatus
+     */
     @PostMapping("/game/updateStatus")
     public ResponseEntity<String> updateGameStatus(@RequestBody UpdateGameStatusDTO updateGameStatusDTO, Authentication authentication) {
     	 if (authentication == null || !authentication.isAuthenticated()) {
@@ -267,6 +288,9 @@ public class RestApiController {
         return ResponseEntity.ok("Spielstatus wurde erfolgreich aktualisiert ");
     }
     
+    /**
+     * nimmt einen Spielzug entgegen
+     */
     @PostMapping("/game/submitGuess")
     public ResponseEntity<String> submitGuess(@RequestBody Map<String, String> requestBody, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

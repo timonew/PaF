@@ -26,8 +26,6 @@ public class WebSocketController {
 
     /**
      * Sendet die Liste der wartenden Spiele an alle Clients.
-     *
-     * @param waitingGames Liste der wartenden Spiele
      */
     public void sendWaitingGames(List<SimpleGameDTO> waitingGames) {
         messagingTemplate.convertAndSend("/topic/waitingGames", waitingGames);
@@ -35,9 +33,6 @@ public class WebSocketController {
 
     /**
      * Sendet eine Spielanfrage an einen spezifischen Benutzer.
-     *
-     * @param userID      ID des Benutzers, der die Nachricht erhalten soll
-     * @param gameRequest Die Spielanfrage-Daten
      */
     public void sendGameRequestToUser(Long userID, GameRequestDTO gameRequest) {
         String destination = String.format("/topic/user/%d/gameRequests", userID);
@@ -45,10 +40,7 @@ public class WebSocketController {
     }
     
     /**
-     * Sendet eine Spielanfrage an einen spezifischen Benutzer.
-     *
-     * @param userID      ID des Benutzers, der die Nachricht erhalten soll
-     * @param gameAnswerDTO Die Spielanfrage-Daten
+     * Sendet eine Spielantwort an einen spezifischen Benutzer.
      */
     public void sendGameAnswerToUser(GameAnswerDTO gameAnswerDTO, Long userID) {
         String destination = String.format("/topic/user/%d/gameRequestsAnswer", userID);
@@ -56,10 +48,7 @@ public class WebSocketController {
     }
     
     /**
-     * Gibt die aktuellen Guesses aus.
-     *
-     * @param GameID      ID des Spieles
-     * @param guessDTO Die Guess-Daten
+     * Gibt die aktuellen Guesses aus.(für Spielzugtabelle aus der Gameseite)
      */
     public void broadcastGuess(Long gameId, GuessBroadcastDTO guessDTO) {
         String destination = "/topic/game/" + gameId + "/guess";
