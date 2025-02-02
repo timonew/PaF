@@ -1,0 +1,38 @@
+.game-container {
+    display: flex;            /* Elemente nebeneinander anordnen */
+    justify-content: space-between; /* Abstand zwischen Karte und Tabelle */
+    align-items: flex-start;   /* Beide Elemente oben ausrichten */
+    width: 100%;
+    gap: 20px;                /* Abstand zwischen den Elementen */
+    padding: 20px;
+}
+
+.game-content {
+    display: flex;
+    justify-content: space-between; /* Abstand zwischen Karte & Tabelle */
+    width: 100%;
+    max-width: 1200px; /* Begrenzte Breite für bessere Darstellung */
+}
+
+.game-map {
+    flex: 2;                 /* Nimmt mehr Platz ein */
+    height: 550px;
+    border: 2px solid #ccc;
+}
+
+.game-table {
+    flex: 1;                 /* Nimmt weniger Platz ein */
+    width: 100%;
+    max-width: 30%;
+    border-collapse: collapse;
+}
+
+.game-table th, .game-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.game-table th {
+    background-color: #f4f4f4;
+}

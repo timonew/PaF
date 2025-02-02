@@ -6,6 +6,8 @@ import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import L from "leaflet"; // Leaflet importieren
 import "./custom.css";
+import backgroundImage from "./images/hintergrund_game.JPEG";
+
 
 // Hilfsfunktionen
 // Haversine-Formel für Entfernung
@@ -322,7 +324,7 @@ const startTimer = (duration, callback) => {
   const starteSpielzuege = () => {
     const vorbereitungsZeit = 3; // 5 Sekunden initiale Vorbereitung
     const pausenZeit = 5; // 8 Sekunden Vorbereitung zwischen Spielzügen
-    const spielZeit = 5; // 20 Sekunden Spielzeit pro Spielzug
+    const spielZeit = 15; // 20 Sekunden Spielzeit pro Spielzug
 
 
     const initialPreparation = () => {startTimer(vorbereitungsZeit,() =>
@@ -442,59 +444,83 @@ const endGame = () => {
     <div>
       <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1.current} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2.current} </strong></p>
 
-       <table>
-        <thead>
-          <tr>
-            <th>Spielzug</th>
-            <th>Stadt</th>
-            <th>Koordinaten</th>
-            <th>Guess {gameDetails.spieler1Name}</th>
-            <th>Guess {gameDetails.spieler2Name}</th>
-            <th>Score {gameDetails.spieler1Name}</th>
-            <th>Score {gameDetails.spieler2Name}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {spielzuege
-           .filter((_, index) => index < currentSpielzugIndex)
-           .map((spielzug, index) => (
-            <tr key={spielzug.spielZugId}>
-              <td>{index + 1}</td> {/* Nummer basierend auf dem Index der Map */}
-                <td>{spielzug.stadtName}</td>
-                <td>{spielzug.koordinaten}</td>
-                <td>{spielzug.guessSpieler1 || "-"}</td>
-                <td>{spielzug.guessSpieler2 || "-"}</td>
-                <td>{spielzug.scoreSpieler1 || "-"}</td>
-                <td>{spielzug.scoreSpieler2 || "-"}</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
 
       {endGameMessage && (
-        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", backgroundColor: "#f0f0f0" }}>
-          <p>{endGameMessage}</p>
-          {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
-        </div>
+          <div style={{marginTop: "20px", padding: "10px", border: "1px solid #ccc"}}>
+            <p>{endGameMessage}</p>
+            {countdown !== null && countdown > 0 && <p>Countdown: {countdown} Sekunden</p>}
+          </div>
       )}
 
-      <h4>Timer: {gameModus===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h4>
+      <h3 style={{ fontSize: '1.3rem' }}>Timer: {gameModus ===2 || gameModus===0 ? "Vorbereitung" : "Spielzug"} {timer} Sekunden</h3>
       {gameModus===1 && (
-        <div>
-          <p><strong>gesuchte Stadt:{spielzuege[currentSpielzugIndex]?.stadtName}</strong></p>
-        </div>
+          <div style={{position: 'relative', width: '100%', height: '100%'}}>
+            <h3 style={{ fontSize: '1.3rem' }}><strong>gesuchte Stadt: {spielzuege[currentSpielzugIndex]?.stadtName}</strong></h3>
+          </div>
       )}
 
-      <div ref={mapRef} style={{
-        width: "800px",
-        height: "800px",
-        margin: "20px auto",
-        borderRadius: "50%",
-        overflow: "hidden",
-        border: "2px solid #ccc",
-      }}></div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
+  <div
+    ref={mapRef}
+    style={{
+      width: "50%",
+      height: "500px",
+      minHeight: "500px",
+      margin: "20px auto",
+      marginLeft: "0px",
+      borderRadius: "0%",
+      overflow: "hidden",
+      border: "2px solid #ccc",
+      display: "flex",
+      flex: "2",
+    }}
+  ></div>
 
-    </div>
+  <div style={{ width: "40%", maxHeight: "500px", overflowY: "auto", overflowX: "auto" }}>
+    <table
+      style={{
+        width: "100%",
+        fontSize: "0.85rem",
+        borderCollapse: "collapse",
+        tableLayout: "fixed",  // Verhindert das Ausdehnen der Spalten
+      }}
+    >
+      <thead>
+        <tr>
+          <th style={{ padding: "5px", borderBottom: "1px solid #ccc", width: "5%" }}>Nr</th>
+          <th style={{ padding: "5px", borderBottom: "1px solid #ccc", width: "15%" }}>Stadt</th>
+          <th style={{ padding: "5px", borderBottom: "1px solid #ccc", width: "20%" }}>
+            Guess {gameDetails.spieler1Name}
+          </th>
+          <th style={{ padding: "5px", borderBottom: "1px solid #ccc", width: "20%" }}>
+            Guess {gameDetails.spieler2Name}
+          </th>
+          <th style={{ padding: "5px", borderBottom: "1px solid #ccc", width: "20%" }}>
+            Score {gameDetails.spieler1Name}
+          </th>
+          <th style={{ padding: "5px", borderBottom: "1px solid #ccc", width: "20%" }}>
+            Score {gameDetails.spieler2Name}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {spielzuege
+          .filter((_, index) => index < currentSpielzugIndex)
+          .map((spielzug, index) => (
+            <tr key={spielzug.spielZugId}>
+              <td style={{ padding: "4px", textAlign: "center" }}>{index + 1}</td>
+              <td style={{ padding: "4px", textAlign: "center" }}>{spielzug.stadtName}</td>
+              <td style={{ padding: "4px", textAlign: "center" }}>{spielzug.guessSpieler1 || "-"}</td>
+              <td style={{ padding: "4px", textAlign: "center" }}>{spielzug.guessSpieler2 || "-"}</td>
+              <td style={{ padding: "4px", textAlign: "center" }}>{spielzug.scoreSpieler1 || "-"}</td>
+              <td style={{ padding: "4px", textAlign: "center" }}>{spielzug.scoreSpieler2 || "-"}</td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
   );
 };
 

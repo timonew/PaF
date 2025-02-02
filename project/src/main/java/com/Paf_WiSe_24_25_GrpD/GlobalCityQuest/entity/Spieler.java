@@ -8,7 +8,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "spieler") // Optional: Tabellennamen angeben
+@Table(name = "spieler") 
 public class Spieler {
 
     @Id
@@ -83,24 +83,5 @@ public class Spieler {
     public void setHighscores(Set<Highscore> highscores) {
         this.highscores = highscores;
     }
-
-	public String getDifficulty() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public String getContinent() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Spieler getSpieler1() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-
 
 }

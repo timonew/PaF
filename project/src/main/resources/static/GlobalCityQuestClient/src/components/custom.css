@@ -1,11 +1,24 @@
+.form {
+  width: 300px;
+  padding: 64px 15px 24px;
+  margin: 0 auto;
+}
+.lobbyinterface {
+  width: 600px;
+  padding: 64px 15px 24px;
+  margin: 0 auto;
+}
+
+
 table {
   border-collapse: collapse;
-  width: 100%;
+  width: 300px;
   font-family: Arial, sans-serif;
   font-size: 12px;
-  table-layout: fixed;
+  table-layout: auto;
   line-height: 1.2;
   margin: 10px 0;
+  max-width: 600px;
 }
 
 th, td {
@@ -20,6 +33,8 @@ th, td {
 th {
   background-color: #f4f4f4;
   font-weight: bold;
+  font-size: 14px;
+  max-width: 600px;
 }
 
 tr:nth-child(even) {
@@ -29,3 +44,368 @@ tr:nth-child(even) {
 tr:hover {
   background-color: #f1f1f1;
 }
+
+h1 {
+  font-size: 23px;
+}
+h2{
+  font-size: 25px;
+  font-family: "Comic Sans MS";
+}
+h3 {
+  font-size: 30px;
+  font-family: "Comic Sans MS";
+}
+.control {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 25px;
+}
+.control input {
+  width: 270px;
+  height: 50px;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-family: monospace, serif;
+  letter-spacing: 0.05em;
+  font-size: 16px;
+}
+
+.control input:hover,
+.control input:focus {
+  outline: none;
+  border: 0;
+}
+.btn {
+  width: 270px;
+  height: 50px;
+  display: block;
+  padding: 14px 16px;
+  background: transparent;
+  outline: none;
+  border: 0;
+  color: #fff;
+  letter-spacing: 0.1em;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 16px;
+}
+.block-cube {
+  position: relative;
+  display: inline-block;
+  gap: 8px;
+}
+
+.block-cube .bg-top {
+  position: absolute;
+  height: 10px;
+  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(52,9,121,1) 37%, rgba(0,212,255,1) 94%);
+  bottom: 100%;
+  left: 5px;
+  right: -5px;
+  transform: skew(-45deg, 0);
+  margin: 0;
+}
+.block-cube-cancel {
+  position: relative;
+  display: inline-block;
+  gap: 8px;
+}
+
+.block-cube-cancel .bg-top {
+  position: absolute;
+  height: 10px;
+  background: linear-gradient(90deg, rgb(44, 0, 0) 0%, rgb(152, 7, 7) 45%, rgb(179, 1, 110) 94%);
+  bottom: 100%;
+  left: 5px;
+  right: -5px;
+  transform: skew(-45deg, 0);
+  margin: 0;
+}
+.block-cube-cancel .bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgb(44, 0, 0) 0%, rgb(152, 7, 7) 45%, rgb(179, 1, 110) 94%);
+}
+.block-cube-cancel .bg-top .bg-inner {
+  bottom: 0;
+}
+
+.block-cube-cancel .bg-right .bg-inner {
+  left: 0;
+}
+
+.block-cube-cancel .bg .bg-inner {
+  transition: all 0.2s ease-in-out;
+}
+
+.block-cube-cancel .bg-inner {
+  background: #212121;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+}
+
+.block-cube-cancel .bg-right {
+  position: absolute;
+  background: rgba(179, 1, 110);
+  top: -5px;
+  z-index: 0;
+  bottom: 5px;
+  width: 10px;
+  left: 100%;
+  transform: skew(0, -45deg);
+}
+
+.block-cube-cancel .text {
+  position: relative;
+  z-index: 2;
+}
+
+.block-cube {
+  position: relative;
+  display: inline-block;
+  gap: 8px;
+}
+
+.block-cube .bg-top {
+  position: absolute;
+  height: 10px;
+  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(52,9,121,1) 37%, rgba(0,212,255,1) 94%);
+  bottom: 100%;
+  left: 5px;
+  right: -5px;
+  transform: skew(-45deg, 0);
+  margin: 0;
+}
+
+.block-cube .bg-top .bg-inner {
+  bottom: 0;
+}
+
+.block-cube .bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(52,9,121,1) 37%, rgba(0,212,255,1) 94%);
+}
+
+.block-cube .bg-right {
+  position: absolute;
+  background: rgba(0,212,255,1);
+  top: -5px;
+  z-index: 0;
+  bottom: 5px;
+  width: 10px;
+  left: 100%;
+  transform: skew(0, -45deg);
+}
+
+.block-cube .bg-right .bg-inner {
+  left: 0;
+}
+
+.block-cube .bg .bg-inner {
+  transition: all 0.2s ease-in-out;
+}
+
+.block-cube .bg-inner {
+  background: #212121;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+}
+
+.block-cube .text {
+  position: relative;
+  z-index: 2;
+}
+
+.block-cube.block-input input {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.block-cube.block-input input:focus ~ .bg-right .bg-inner,
+.block-cube.block-input input:focus ~ .bg-top .bg-inner,
+.block-cube.block-input input:focus ~ .bg-inner .bg-inner {
+  top: 100%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.block-cube.block-input .bg-top,
+.block-cube.block-input .bg-right,
+.block-cube.block-input .bg {
+  background: rgba(255, 255, 255, 0.5);
+  transition: background 0.2s ease-in-out;
+}
+
+.block-cube.block-input .bg-right,
+.block-cube.block-input .bg-top .bg-inner {
+  transition: all 0.2s ease-in-out;
+}
+
+.block-cube.block-input:focus,
+.block-cube.block-input:hover .bg-top,
+.block-cube.block-input:hover .bg-right,
+.block-cube.block-input:hover .bg {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.block-cube-hover:focus .bg .bg-inner,
+.block-cube-hover:hover .bg .bg-inner {
+  top: 100%;
+}
+
+.dropdown {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  font-family: monospace, serif;
+  font-size: 16px;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+.dropdown option {
+  background-color: #212121; /* Hintergrundfarbe für die Optionen */
+  color: white; /* Textfarbe für die Optionen */
+}
+
+.dropdown-container {
+  position: relative; /* Hintergrund-Styling gilt für das Dropdown */
+  display: flex;
+  align-items: center;
+}
+
+.dropdown::after {
+  content: "▼";
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  color: white;
+  pointer-events: none;
+}
+.dropdown:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.block-input {
+  select {
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: transparent;
+    color: white;
+    font-family: monospace, serif;
+    font-size: 16px;
+    appearance: none; /* Entfernt Standard-Pfeile von Dropdowns */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    z-index: 2;
+    position: relative;
+  }
+  select:focus,
+  select:hover {
+    outline: none;
+    border: none;
+  }
+}
+.block-input select {
+  padding-right: 40px; /* Platz für den Pfeil */
+}
+
+
+.block-input select::after {
+  content: "▼"; /* Dropdown-Pfeil */
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  color: white;
+  pointer-events: none;
+}
+
+.table-container {
+  width: 100%;
+  margin-top: 20px;
+}
+
+table {
+  width: 750px;
+  border-collapse: collapse;
+  font-family: monospace, serif;
+  font-size: 16px;
+  color: white;
+  background: transparent;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 14px 16px;
+  border: none;
+  text-align: center;
+}
+
+th {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+thead tr:hover{
+  background: rgba(255, 255, 255, 0.00);
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.5);
+  transition: background 0.3s ease-in-out;
+}
+tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.3);
+  transition: background 0.3s ease-in-out;
+}
+
+tbody tr:hover {
+  background: linear-gradient(90deg, rgba(2,0,36,0.3) 0%, rgba(52,9,121,0.3) 37%, rgba(0,212,255,0.3) 94%);
+}
+
+/* Styling für die Buttons innerhalb der Tabelle */
+table button {
+  display: inline-block;
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: white;
+  border: none;
+  font-family: monospace, serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+}
+
+table button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+

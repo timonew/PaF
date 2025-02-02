@@ -1,3 +1,9 @@
+/**
+ * Controller zur Bereistellung der Websockets.
+ * 
+ * @author Timo Neuwerk
+ * @date 01.02.2025
+ */
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller;
 
 import java.util.List;

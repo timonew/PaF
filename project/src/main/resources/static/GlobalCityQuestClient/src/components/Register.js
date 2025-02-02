@@ -27,17 +27,50 @@ function Register() {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <label>
-                Username:
-                <input type="text" name="userName" value={formData.userName} onChange={handleChange} required />
-            </label>
-            <label>
-                Password:
-                <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-            </label>
-            <button type="submit">Register</button>
-        </form>
+        <div className="form">
+            <h1 className="control">
+                Register
+            </h1>
+            <div className="control block-cube block-input">
+                <input type="text" name="userName" value={formData.userName} onChange={handleChange} required
+                       placeholder="User Name"/>
+                <div className="bg-top">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg-right">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg">
+                    <div className="bg-inner"></div>
+                </div>
+            </div>
+            <div className="control block-cube block-input">
+                <input type="password" name="password" value={formData.password} onChange={handleChange} required
+                       placeholder="Password"/>
+                <div className="bg-top">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg-right">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg">
+                    <div className="bg-inner"></div>
+                </div>
+            </div>
+            <button className="btn block-cube block-cube-hover"
+                onClick={handleSubmit}>
+                <div className="bg-top">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg-right">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="bg">
+                    <div className="bg-inner"></div>
+                </div>
+                <div className="text">Register</div>
+            </button>
+        </div>
     );
 }
 

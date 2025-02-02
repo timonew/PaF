@@ -1,3 +1,9 @@
+/**
+ * Controller zur Bereistellung der Websockets.
+ * 
+ * @author Timo Neuwerk
+ * @date 01.02.2025
+ */
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller;
 
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.SimpleGameDTO;
@@ -49,6 +55,12 @@ public class WebSocketController {
         messagingTemplate.convertAndSend(destination, gameAnswerDTO);
     }
     
+    /**
+     * Gibt die aktuellen Guesses aus.
+     *
+     * @param GameID      ID des Spieles
+     * @param guessDTO Die Guess-Daten
+     */
     public void broadcastGuess(Long gameId, GuessBroadcastDTO guessDTO) {
         String destination = "/topic/game/" + gameId + "/guess";
         messagingTemplate.convertAndSend(destination, guessDTO);

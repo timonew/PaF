@@ -1,3 +1,11 @@
+/**
+ * Dieser Controller verwaltet alle WebSocket-Kommunikationen zwischen dem Server und den Clients.
+ * Er sendet Nachrichten zu wartenden Spielen, Spielanfragen, Antworten und Guess-Daten.
+ * 
+ * @author Timo Neuwerk
+ * @date 01.02.2025
+ */
+
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service;
 
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.config.AuthStatus;
@@ -18,27 +26,34 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service-Klasse zur Verwaltung der Benutzer und deren Authentifizierung,
+ * Registrierung sowie zum Abrufen von Spieler-Details und Highscores.
+ */
 @Service
 public class UserService implements UserDetailsService {
-	
-	@Autowired
-	private SpielRepository spielRepository;
 
-	@Autowired
-	private SpielerRepository spielerRepository;
+    @Autowired
+    private SpielRepository spielRepository;
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+    @Autowired
+    private SpielerRepository spielerRepository;
 
-	@Autowired
-	private HighscoreRepository highscoreRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private HighscoreRepository highscoreRepository;
 
-    // Registrierung eines neuen Benutzers mit Passwortverschlüsselung und Validierung
+    /**
+     * Registriert einen neuen Benutzer, verschlüsselt das Passwort und speichert ihn in der Datenbank.
+     *
+     * @param spieler Der Spieler, der registriert werden soll
+     * @return Status der Registrierung
+     */
     public RegistrationStatus registerUser(Spieler spieler) {
         if (isUserExists(spieler.getUserName())) {
             return RegistrationStatus.USER_ALREADY_EXISTS;
@@ -54,10 +69,22 @@ public class UserService implements UserDetailsService {
         return RegistrationStatus.SUCCESS;
     }
 
+    /**
+     * Speichert einen Benutzer in der Datenbank.
+     *
+     * @param spieler Der Spieler, der gespeichert werden soll
+     */
     private void saveUser(Spieler spieler) {
         spielerRepository.save(spieler);
     }
 
+    /**
+     * Authentifiziert einen Benutzer basierend auf seinem Benutzernamen und Passwort.
+     *
+     * @param userName Der Benutzername
+     * @param password Das Passwort des Benutzers
+     * @return Status der Authentifizierung
+     */
     public AuthStatus authenticate(String userName, String password) {
         Spieler spieler = findUserByUsername(userName);
 
@@ -76,8 +103,13 @@ public class UserService implements UserDetailsService {
         return AuthStatus.SUCCESS;
     }
 
-
-
+    /**
+     * Lädt die Benutzerinformationen für den angegebenen Benutzernamen.
+     *
+     * @param userName Der Benutzername des Benutzers
+     * @return Benutzerdetails
+     * @throws UsernameNotFoundException Wenn der Benutzer nicht gefunden wird
+     */
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         Optional<Spieler> spielerOpt = spielerRepository.findByUserName(userName);
@@ -92,27 +124,58 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
+    /**
+     * Überprüft, ob der Benutzername bereits existiert.
+     *
+     * @param userName Der Benutzername
+     * @return true, wenn der Benutzername existiert, andernfalls false
+     */
     private boolean isUserExists(String userName) {
         return spielerRepository.findByUserName(userName).isPresent();
     }
 
+    /**
+     * Validiert die Benutzerinformationen.
+     *
+     * @param spieler Der Spieler, der validiert werden soll
+     * @return true, wenn die Daten gültig sind, andernfalls false
+     */
     private boolean isValid(Spieler spieler) {
         // Validierung der Benutzerinformationen
         return spieler.getUserName() != null && !spieler.getUserName().isEmpty() &&
                spieler.getPassword() != null && !spieler.getPassword().isEmpty();
     }
 
+    /**
+     * Findet einen Benutzer anhand seines Benutzernamens.
+     *
+     * @param userName Der Benutzername des gesuchten Spielers
+     * @return Der gefundene Spieler oder null, wenn nicht gefunden
+     */
     private Spieler findUserByUsername(String userName) {
         Optional<Spieler> spielerOpt = spielerRepository.findByUserName(userName);
         return spielerOpt.orElse(null); // Gibt null zurück, wenn Benutzer nicht gefunden
     }
 
+    /**
+     * Gibt die ID des Spielers anhand seines Benutzernamens zurück.
+     *
+     * @param userName Der Benutzername des Spielers
+     * @return Die ID des Spielers
+     */
     public Long getIdByUsername(String userName) {
         Optional<Spieler> spielerOpt = spielerRepository.findByUserName(userName);
         Spieler spieler = spielerOpt.get();
         return spieler.getId();
     }
-    
+
+    /**
+     * Gibt die Details eines Spielers anhand seines Benutzernamens zurück.
+     *
+     * @param username Der Benutzername des Spielers
+     * @return Die Details des Spielers
+     * @throws RuntimeException Wenn der Spieler nicht gefunden wird
+     */
     public PlayerDetailsDTO getPlayerDetailsByUsername(String username) {
         Optional<Spieler> spielerOptional = spielerRepository.findByUserName(username);
 
@@ -131,8 +194,6 @@ public class UserService implements UserDetailsService {
             dto.setScore(highscore.getScore());
             return dto;
         }).toList();
-        
-        
 
         PlayerDetailsDTO playerDetailsDTO = new PlayerDetailsDTO();
         playerDetailsDTO.setUsername(spieler.getUserName());
@@ -140,23 +201,24 @@ public class UserService implements UserDetailsService {
         playerDetailsDTO.setHighscores(highscoreDTOs);
         playerDetailsDTO.setGamesPlayed(spielRepository.countBySpieler(spieler));
         playerDetailsDTO.setGamesWon(spielRepository.countByWinner(spieler));
-        
 
         return playerDetailsDTO;
     }
 
-	public void saveWinner(Long gameId, Long winnerId) {
-		 Spiel spiel = spielRepository.findById(gameId)
-	                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
-		 
-		Spieler winner = spielerRepository.findById(winnerId)
-				.orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + winnerId));
-		 
-			 spiel.setWinner(winner);
-			 spielRepository.save(spiel);
-		 
-		 
-		 
-		
-	}
+    /**
+     * Speichert den Gewinner eines Spiels.
+     *
+     * @param gameId   Die ID des Spiels
+     * @param winnerId Die ID des Gewinners
+     */
+    public void saveWinner(Long gameId, Long winnerId) {
+        Spiel spiel = spielRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Spiel nicht gefunden: " + gameId));
+
+        Spieler winner = spielerRepository.findById(winnerId)
+                .orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + winnerId));
+
+        spiel.setWinner(winner);
+        spielRepository.save(spiel);
+    }
 }

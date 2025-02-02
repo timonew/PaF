@@ -1,14 +1,18 @@
+/**
+ * Controller zur Bereistellung der Websockets.
+ * 
+ * @author Timo Neuwerk
+ * @date 01.02.2025
+ */
 package com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.service;
 
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.controller.WebSocketController;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.dto.*;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Highscore;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.MapLayer;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spiel;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spieler;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Spielzug;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.entity.Stadt;
-import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.HighscoreRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.MapLayerRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielRepository;
 import com.Paf_WiSe_24_25_GrpD.GlobalCityQuest.repository.SpielerRepository;
@@ -46,6 +50,11 @@ public class GameService {
     @Autowired
     private WebSocketController webSocketController; 
 
+    /**
+     * Holt den Status eines Spiels.
+     * @param gameId ID des Spiels.
+     * @param username spieler, der beitreten möchte.
+     */
     
     public void joinGame(Long gameId, String username) {
         Spiel spiel = spielRepository.findById(gameId)
@@ -69,7 +78,6 @@ public class GameService {
     /**
      * Holt den Status eines Spiels.
      * @param gameId ID des Spiels.
-     * @return Status des Spiels.
      */
     public String getGameStatus(Long gameId) {
         Optional<Spiel> optionalSpiel = spielRepository.findById(gameId);
@@ -80,7 +88,6 @@ public class GameService {
     /**
      * Aktualisiert den Status eines Spiels.
      * @param updateGameStatusDTO Daten zur Aktualisierung des Spielstatus.
-     * @return Neuer Status des Spiels.
      */
     public void setGameStatus(UpdateGameStatusDTO updateGameStatusDTO) {
         if (updateGameStatusDTO == null || updateGameStatusDTO.getGameId() == null || updateGameStatusDTO.getNewStatus() == null) {
@@ -151,7 +158,6 @@ public class GameService {
      * Spieler 2 sendet eine Anfrage an Spieler 1.
      * @param gameId ID des Spiels.
      * @param requestingPlayer Benutzername des anfragenden Spielers (Spieler 2).
-     * @return Das erstellte GameRequestDTO.
      */
     public GameRequestDTO sendGameRequest(Long gameId, String requestingPlayer) {
         // Spiel und Spieler laden
