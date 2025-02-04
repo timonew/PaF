@@ -441,6 +441,7 @@ const endGame = () => {
   }
 
   return (
+  <body style={{ backgroundImage:`url(${backgroundImage})`}}>
     <div>
       <p><strong>{gameDetails.spieler1Name} Punkte: {totalScorePl1.current} </strong> | <strong>{gameDetails.spieler2Name} Punkte: {totalScorePl2.current} </strong></p>
 
@@ -521,6 +522,7 @@ const endGame = () => {
   </div>
 </div>
 </div>
+</body>
   );
 };
 
